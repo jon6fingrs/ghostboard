@@ -2,6 +2,8 @@
 
 Ghostboard is a lightweight, self-hosted solution for real-time synchronized text sharing. This repository includes a WebSocket server for syncing text across multiple clients and a command-line client for retrieving or updating the shared text.
 
+This is aimed at selfhosters who want to quickly and easily share text between computers. There is absolutely no encryption or security. This is not something which should be deployed on the internet. It simply creates a webpage that accepts text. The text is mirrored across all instances. In addition, there is a CLI client to interact with the text without access to a webpage or gui.
+
 ---
 
 ## Features
@@ -74,7 +76,7 @@ ghostboard/
    - Open `http://<server-ip>:8080` in your browser.
    - Text changes will synchronize in real time.
 
-#### Using Docker
+#### Using Docker (build image)
 
 1. Build the server image:
    ```bash
@@ -83,10 +85,20 @@ ghostboard/
 
 2. Run the server container:
    ```bash
-   docker run --rm -p 8080:8080 ghostboard-server
+   docker run --rm -p 8080:8080 -p 8765:8765 ghostboard-server
    ```
 
 3. Access the server:
+   - Open `http://<server-ip>:8080` in your browser.
+
+#### Using Docker (prebuilt)
+
+1. Run the server container:
+   ```bash
+   docker run --rm -p 8080:8080 -p 8765:8765 thehelpfulidiot/ghostboard-server
+   ```
+
+2. Access the server:
    - Open `http://<server-ip>:8080` in your browser.
 
 ---
@@ -132,6 +144,19 @@ ghostboard/
    docker run --rm ghostboard-client <server-ip> "New text to share"
    ```
 
+#### Using Docker (prebuilt)
+
+1. Retrieve the current text:
+   ```bash
+   docker run --rm thehelpfulidiot/ghostboard-client:latest <server-ip>
+   ```
+
+3. Update the shared text:
+   ```bash
+   docker run --rm thehelpfulidiot/ghostboard-client <server-ip> "New text to share"
+   ```
+server-ip should be the ip and port of the WEBSOCKET server, so for example, localhost:8765. 8080 is the web server and 8765 is the websockets server. If you provide an IP address, it will append ws:// and port 8765. If you specify an FQDN, it will default to wss:// and append /ws at the end of the domain.
+
 ---
 
 ## Examples
@@ -155,6 +180,14 @@ Output:
 ```
 Text updated successfully.
 ```
+```bash
+cat text.txt | python3 client/text_client.py example.com -
+```
+
+Output:
+```
+Text updated successfully.
+```
 
 #### **Docker**:
 Retrieve text:
@@ -167,8 +200,17 @@ Update text:
 docker run --rm ghostboard-client example.com "Text updated via Docker!"
 ```
 
----
+Update text:
+```bash
+cat text.txt | docker run --rm -i ghostboard-client example.com -
+```
+If piping stdout to ghostboard, you must include the interactive flag in the client container so that it can receive the stdout.
 
+---
+## Reverse Proxy
+
+This can function behind a reverse proxy, relying on a single port. However, you have to add a custom location '/ws' which will forward traffic to <server-ip>:8765 (websocket port). The location is added to your reverse proxy configuration.
+---
 ## Contributing
 
 Contributions are welcome! Feel free to open an issue or submit a pull request.
