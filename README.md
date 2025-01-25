@@ -18,7 +18,7 @@ This project is aimed at self-hosters who want to quickly and easily share text 
   - Supports WebSocket servers using IPs or domain names.
 
 - **Dockerized**:
-  - Both server and client are packaged as Docker containers for ease of deployment.
+  - Both server and client are available as prebuilt Docker images for ease of deployment.
 
 ---
 
@@ -55,6 +55,21 @@ ghostboard/
 
 ### Running the Server
 
+#### Using Prebuilt Docker Image
+
+1. Pull the prebuilt server image:
+   ```bash
+   docker pull thehelpfulidiot/ghostboard-server
+   ```
+
+2. Run the server container:
+   ```bash
+   docker run --rm -p 8080:8080 -p 8765:8765 thehelpfulidiot/ghostboard-server
+   ```
+
+3. Access the server:
+   - Open `http://<server-ip>:8080` in your browser.
+
 #### Using Python
 
 1. Navigate to the `server/` directory:
@@ -76,24 +91,31 @@ ghostboard/
    - Open `http://<server-ip>:8080` in your browser.
    - All text changes will synchronize in real time.
 
-#### Using Docker
-
-1. Build the server image:
-   ```bash
-   docker build -t ghostboard-server ./server
-   ```
-
-2. Run the server container:
-   ```bash
-   docker run --rm -p 8080:8080 -p 8765:8765 ghostboard-server
-   ```
-
-3. Access the server:
-   - Open `http://<server-ip>:8080` in your browser.
-
 ---
 
 ### Running the Client
+
+#### Using Prebuilt Docker Image
+
+1. Pull the prebuilt client image:
+   ```bash
+   docker pull thehelpfulidiot/ghostboard-client
+   ```
+
+2. Retrieve the current text:
+   ```bash
+   docker run --rm thehelpfulidiot/ghostboard-client <server-ip>
+   ```
+
+3. Update the shared text:
+   ```bash
+   docker run --rm thehelpfulidiot/ghostboard-client <server-ip> "New text to share"
+   ```
+
+4. Update text from a file:
+   ```bash
+   cat text.txt | docker run --rm -i thehelpfulidiot/ghostboard-client <server-ip> -
+   ```
 
 #### Using Python
 
@@ -115,28 +137,6 @@ ghostboard/
 4. Update the shared text:
    ```bash
    python3 text_client.py <server-ip> "New shared text"
-   ```
-
-#### Using Docker
-
-1. Build the client image:
-   ```bash
-   docker build -t ghostboard-client ./client
-   ```
-
-2. Retrieve the current text:
-   ```bash
-   docker run --rm ghostboard-client <server-ip>
-   ```
-
-3. Update the shared text:
-   ```bash
-   docker run --rm ghostboard-client <server-ip> "New text to share"
-   ```
-
-4. Update from file:
-   ```bash
-   cat text.txt | docker run --rm -i ghostboard-client <server-ip> -
    ```
 
 ---
