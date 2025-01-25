@@ -2,7 +2,7 @@
 
 Ghostboard is a lightweight, self-hosted solution for real-time synchronized text sharing. This repository includes a WebSocket server for syncing text across multiple clients and a command-line client for retrieving or updating the shared text.
 
-This is aimed at selfhosters who want to quickly and easily share text between computers. There is absolutely no encryption or security. This is not something which should be deployed on the internet. It simply creates a webpage that accepts text. The text is mirrored across all instances. In addition, there is a CLI client to interact with the text without access to a webpage or gui.
+This project is aimed at self-hosters who want to quickly and easily share text between devices. **There is no encryption or security**—it is not suitable for deployment on the internet or other untrusted networks. Ghostboard creates a simple webpage that accepts text, which is mirrored across all connected instances. A command-line client is also provided for interacting with the text without requiring a graphical interface.
 
 ---
 
@@ -15,7 +15,7 @@ This is aimed at selfhosters who want to quickly and easily share text between c
 
 - **Client**:
   - Command-line tool to retrieve or update the shared text.
-  - Supports WebSocket servers with IPs or domain names.
+  - Supports WebSocket servers using IPs or domain names.
 
 - **Dockerized**:
   - Both server and client are packaged as Docker containers for ease of deployment.
@@ -33,7 +33,7 @@ ghostboard/
 ├── server/                  # Server-related files
 │   ├── Dockerfile           # Dockerfile for the server
 │   ├── requirements.txt     # Python dependencies for the server
-│   ├── get_text.py          # WebSocket server script
+│   ├── server.py            # WebSocket server script
 │   ├── index.html           # Webpage for real-time synchronization
 ├── .gitignore               # Ignore unnecessary files
 ├── LICENSE                  # Project license
@@ -46,8 +46,8 @@ ghostboard/
 
 ### Prerequisites
 
-- Docker (for running containers)
-- Python 3.8+ (if running the scripts locally)
+- **Docker** (for containerized deployment)
+- **Python 3.8+** (if running the scripts locally)
 
 ---
 
@@ -69,14 +69,14 @@ ghostboard/
 
 3. Run the server:
    ```bash
-   python3 get_text.py
+   python3 server.py
    ```
 
 4. Access the server:
    - Open `http://<server-ip>:8080` in your browser.
-   - Text changes will synchronize in real time.
+   - All text changes will synchronize in real time.
 
-#### Using Docker (build image)
+#### Using Docker
 
 1. Build the server image:
    ```bash
@@ -89,16 +89,6 @@ ghostboard/
    ```
 
 3. Access the server:
-   - Open `http://<server-ip>:8080` in your browser.
-
-#### Using Docker (prebuilt)
-
-1. Run the server container:
-   ```bash
-   docker run --rm -p 8080:8080 -p 8765:8765 thehelpfulidiot/ghostboard-server
-   ```
-
-2. Access the server:
    - Open `http://<server-ip>:8080` in your browser.
 
 ---
@@ -124,7 +114,7 @@ ghostboard/
 
 4. Update the shared text:
    ```bash
-   python3 text_client.py <server-ip> "New text to share"
+   python3 text_client.py <server-ip> "New shared text"
    ```
 
 #### Using Docker
@@ -144,18 +134,10 @@ ghostboard/
    docker run --rm ghostboard-client <server-ip> "New text to share"
    ```
 
-#### Using Docker (prebuilt)
-
-1. Retrieve the current text:
+4. Update from file:
    ```bash
-   docker run --rm thehelpfulidiot/ghostboard-client:latest <server-ip>
+   cat text.txt | docker run --rm -i ghostboard-client <server-ip> -
    ```
-
-3. Update the shared text:
-   ```bash
-   docker run --rm thehelpfulidiot/ghostboard-client <server-ip> "New text to share"
-   ```
-server-ip should be the ip and port of the WEBSOCKET server, so for example, localhost:8765. 8080 is the web server and 8765 is the websockets server. If you provide an IP address, it will append ws:// and port 8765. If you specify an FQDN, it will default to wss:// and append /ws at the end of the domain.
 
 ---
 
@@ -180,6 +162,8 @@ Output:
 ```
 Text updated successfully.
 ```
+
+### Update Text from File
 ```bash
 cat text.txt | python3 client/text_client.py example.com -
 ```
@@ -189,31 +173,41 @@ Output:
 Text updated successfully.
 ```
 
-#### **Docker**:
-Retrieve text:
-```bash
-docker run --rm ghostboard-client example.com
-```
+---
 
-Update text:
-```bash
-docker run --rm ghostboard-client example.com "Text updated via Docker!"
-```
+## Reverse Proxy Configuration
 
-Update text:
-```bash
-cat text.txt | docker run --rm -i ghostboard-client example.com -
+Ghostboard can function behind a reverse proxy, requiring only a single exposed port for both HTTP and WebSocket traffic. To configure your reverse proxy:
+
+1. Route `/` traffic to the HTTP server (`<server-ip>:8080`).
+2. Route `/ws` traffic to the WebSocket server (`<server-ip>:8765`).
+
+Example configuration for Nginx:
+```nginx
+location / {
+    proxy_pass http://<server-ip>:8080;
+}
+
+location /ws {
+    proxy_pass http://<server-ip>:8765;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "Upgrade";
+}
 ```
-If piping stdout to ghostboard, you must include the interactive flag in the client container so that it can receive the stdout.
 
 ---
-## Reverse Proxy
 
-This can function behind a reverse proxy, relying on a single port. However, you have to add a custom location '/ws' which will forward traffic to <server-ip>:8765 (websocket port). The location is added to your reverse proxy configuration.
+## Notes on Address and Ports
+
+- **IP Addresses**: If you provide an IP address (e.g., `192.168.1.1`), the client defaults to `ws://<ip>:8765`.
+- **Domain Names**: If you provide a domain name (e.g., `example.com`), the client defaults to `wss://<domain>:443/ws`.
+
 ---
+
 ## Contributing
 
-Contributions are welcome! Feel free to open an issue or submit a pull request.
+Contributions are welcome! Feel free to open an issue or submit a pull request to improve the project.
 
 ---
 
