@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ghostboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        textarea {
+            width: 80%;
+            height: 300px;
+            font-size: 16px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Realtime Synced Text Field</h1>
+    <textarea id="shared-text"></textarea>
+
+    <script>
+        const textarea = document.getElementById("shared-text");
+
+        // Dynamically determine the WebSocket URL
+        const websocketUrl =
+            (location.protocol === "https:" ? "wss://" : "ws://") +
+            location.hostname +
+            (location.port === "8080" ? ":8765" : "/ws"); // Use :8765 for direct IP, /ws for FQDN
+
+        console.log("WebSocket URL:", websocketUrl); // Log the WebSocket URL for debugging
+
+        const socket = new WebSocket(websocketUrl);
+
+        // Receive updates from the server
+        socket.addEventListener("message", (event) => {
+            const text = event.data;
+            if (text !== textarea.value) {
+                textarea.value = text;
+            }
+        });
+
+        // Handle errors
+        socket.addEventListener("error", (error) => {
+            console.error("WebSocket error:", error);
+        });
+
+        // Send updates to the server
+        textarea.addEventListener("input", () => {
+            socket.send(textarea.value);
+        });
+</script>
+
+
+</body>
+</html>
