@@ -12,6 +12,7 @@ This project is aimed at self-hosters who want to quickly and easily share text 
   - Serves a webpage with a real-time synchronized text field.
   - Clients see live updates as text is typed.
   - Text remains synchronized across all connected clients.
+  - **New Feature**: Dynamically create multiple boards based on the URL path. Each unique subdirectory (e.g., /test or /example) hosts an independent board with its own synchronized text field.
 
 - **Client**:
   - Command-line tool to retrieve or update the shared text.
@@ -90,6 +91,7 @@ ghostboard/
 4. Access the server:
    - Open `http://<server-ip>:8080` in your browser.
    - All text changes will synchronize in real time.
+   - Open any page to create a new and separate board e.g. `http:<server-ip>:8080/new-board`.
 
 ---
 
@@ -181,6 +183,7 @@ Ghostboard can function behind a reverse proxy, requiring only a single exposed 
 
 1. Route `/` traffic to the HTTP server (`<server-ip>:8080`).
 2. Route `/ws` traffic to the WebSocket server (`<server-ip>:8765`).
+3. Route `/ws/` traffic to the WebSocket server (`<server-ip>:8765`).
 
 Example configuration for Nginx:
 ```nginx
@@ -194,6 +197,16 @@ location /ws {
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "Upgrade";
 }
+
+location /ws/ {
+    proxy_pass http://<server-ip>:8765;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "Upgrade";
+}
+
+error_page 404 /index.html;
+
 ```
 
 ---
