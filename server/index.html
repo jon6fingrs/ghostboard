@@ -29,15 +29,25 @@
     <script>
         const textarea = document.getElementById("shared-text");
 
-        // Dynamically determine the WebSocket URL
-        const websocketUrl = 
-            (location.protocol === "https:" ? "wss://" : "ws://") +
-            location.hostname +
-            ":8765" +
-            location.pathname; // Include the dynamic path (e.g., /test)
+        // Dynamically determine WebSocket URL
+        const websocketUrl = (() => {
+            const isIPAddress = /^[0-9.]+$/.test(location.hostname);
+            const isLocalhost = location.hostname === "localhost";
+            const protocol = location.protocol === "https:" ? "wss://" : "ws://";
+
+            if (isIPAddress || isLocalhost) {
+                // For IP addresses or localhost, use port 8765 and include the path
+                return `${protocol}${location.hostname}:8765${location.pathname}`;
+            } else {
+                // For domains, use /ws as the base and append the path
+                const path = location.pathname === "/" ? "" : location.pathname;
+                return `${protocol}${location.hostname}/ws${path}`;
+            }
+        })();
 
         console.log("WebSocket URL:", websocketUrl); // Debugging
 
+        // Establish the WebSocket connection
         const socket = new WebSocket(websocketUrl);
 
         // Receive updates from the server
@@ -48,17 +58,17 @@
             }
         });
 
-        // Handle errors
+        // Handle WebSocket errors
         socket.addEventListener("error", (error) => {
             console.error("WebSocket error:", error);
         });
 
-        // Handle connection close
+        // Handle WebSocket closure
         socket.addEventListener("close", () => {
             console.warn("WebSocket connection closed.");
         });
 
-        // Send updates to the server
+        // Send updates to the server when the textarea value changes
         textarea.addEventListener("input", () => {
             if (socket.readyState === WebSocket.OPEN) {
                 socket.send(textarea.value);
@@ -66,8 +76,6 @@
                 console.error("WebSocket is not open.");
             }
         });
-
     </script>
 </body>
 </html>
-
