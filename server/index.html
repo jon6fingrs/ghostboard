@@ -30,12 +30,13 @@
         const textarea = document.getElementById("shared-text");
 
         // Dynamically determine the WebSocket URL
-        const websocketUrl =
+        const websocketUrl = 
             (location.protocol === "https:" ? "wss://" : "ws://") +
             location.hostname +
-            (location.port === "8080" ? ":8765" : "/ws"); // Use :8765 for direct IP, /ws for FQDN
+            ":8765" +
+            location.pathname; // Include the dynamic path (e.g., /test)
 
-        console.log("WebSocket URL:", websocketUrl); // Log the WebSocket URL for debugging
+        console.log("WebSocket URL:", websocketUrl); // Debugging
 
         const socket = new WebSocket(websocketUrl);
 
@@ -52,12 +53,21 @@
             console.error("WebSocket error:", error);
         });
 
+        // Handle connection close
+        socket.addEventListener("close", () => {
+            console.warn("WebSocket connection closed.");
+        });
+
         // Send updates to the server
         textarea.addEventListener("input", () => {
-            socket.send(textarea.value);
+            if (socket.readyState === WebSocket.OPEN) {
+                socket.send(textarea.value);
+            } else {
+                console.error("WebSocket is not open.");
+            }
         });
-</script>
 
-
+    </script>
 </body>
 </html>
+
