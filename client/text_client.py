@@ -12,20 +12,24 @@ def format_server_url(server_input):
     if server_input.startswith("ws://") or server_input.startswith("wss://"):
         return server_input
 
+    # Extract path (subdirectory) if included in the server input
+    parts = server_input.split("/", 1)
+    server_address = parts[0]
+    path = f"/{parts[1]}" if len(parts) > 1 else "/"
+
     # Check if a port is included in the address
-    if ":" in server_input and not server_input.startswith("["):
+    if ":" in server_address and not server_address.startswith("["):
         # IPv4 with port or domain with port
-        if re.match(r"^\d{1,3}(\.\d{1,3}){3}:\d+$", server_input) or ":" in server_input.split(":")[-1]:
-            return f"ws://{server_input}"  # Keep the existing port
+        if re.match(r"^\d{1,3}(\.\d{1,3}){3}:\d+$", server_address) or ":" in server_address.split(":")[-1]:
+            return f"ws://{server_address}{path}"  # Keep the existing port
 
     # Match an IP address (e.g., 192.168.1.1)
     ip_pattern = r"^\d{1,3}(\.\d{1,3}){3}$"
-    if re.match(ip_pattern, server_input):
-        return f"ws://{server_input}:8765"  # Default to ws:// with port 8765 for IPs
+    if re.match(ip_pattern, server_address):
+        return f"ws://{server_address}:8765{path}"  # Default to ws:// with port 8765 for IPs
 
     # Assume it is a domain name
-    return f"wss://{server_input}:443/ws"  # Default to wss:// with port 443 for domains
-
+    return f"wss://{server_address}:443{path}"  # Default to wss:// with port 443 for domains
 
 
 async def get_shared_text(server_url):
@@ -60,7 +64,9 @@ if __name__ == "__main__":
         print("  python3 text_client.py <server-address> [<new-text>|-]", file=sys.stderr)
         print("Examples:", file=sys.stderr)
         print("  Retrieve current text: python3 text_client.py 192.168.1.1", file=sys.stderr)
+        print("  Retrieve current text from a subdirectory: python3 text_client.py 192.168.1.1/random", file=sys.stderr)
         print("  Update text: python3 text_client.py example.com \"New shared text\"", file=sys.stderr)
+        print("  Update text in a subdirectory: python3 text_client.py example.com/random \"New text\"", file=sys.stderr)
         print("  Update with file: cat text.txt | python3 text_client.py 192.168.1.1 -", file=sys.stderr)
         sys.exit(1)
 
