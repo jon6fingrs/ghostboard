@@ -13,7 +13,6 @@ This project is aimed at self-hosters who want to quickly and easily share text 
   - Clients see live updates as text is typed.
   - Text remains synchronized across all connected clients.
   - **New Feature**: Dynamically create multiple boards based on the URL path. Each unique subdirectory (e.g., /test or /example) hosts an independent board with its own synchronized text field.
-  - **New Feature**: Added Dark Mode and improved styling. Refined CSS for better readability and transitions. Implemented an iOS-style toggle switch for theme switching. Added simple icon.
 
 - **Client**:
   - Command-line tool to retrieve or update the shared text.
