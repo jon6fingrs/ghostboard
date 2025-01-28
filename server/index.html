@@ -11,7 +11,15 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            transition: background-color 0.3s, color 0.3s;
         }
+
+        /* Default dark mode styles */
+        body.dark-mode {
+            background-color: #343541;
+            color: #d1d5db;
+        }
+
         textarea {
             width: 80%;
             height: 300px;
@@ -19,38 +27,164 @@
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+
+        /* Dark mode textarea styles */
+        body.dark-mode textarea {
+            background-color: #40414f;
+            color: #e5e7eb;
+            border-color: #3e4048;
+        }
+
+        /* Light mode styles */
+        body.light-mode {
+            background-color: #ffffff;
+            color: #333333;
+        }
+
+        body.light-mode textarea {
+            background-color: #ffffff;
+            color: #333333;
+            border-color: #cccccc;
+        }
+
+        /* Toggle switch container */
+        .slider-container {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        /* Toggle switch styling */
+        .slider {
+            position: relative;
+            width: 50px;
+            height: 25px;
+            background-color: #ccc;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        /* The toggle handle */
+        .slider .toggle {
+            position: absolute;
+            top: 2.5px;
+            width: 20px;
+            height: 20px;
+            background-color: white;
+            border-radius: 50%;
+            transition: left 0.3s ease-in-out, background-color 0.3s ease-in-out;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Day mode: toggle to the left */
+        .slider .toggle {
+            left: 2.5px;
+        }
+
+        /* Night mode: toggle to the right */
+        body.dark-mode .slider .toggle {
+            left: 27.5px;
+        }
+
+        /* Icons inside the toggle */
+        .slider .icon {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            color: #ffffff;
+            transition: opacity 0.3s;
+        }
+
+        /* Sun icon (☀️) on the right side in day mode */
+        .slider .icon.sun {
+            right: 5px;
+            opacity: 1;
+        }
+
+        /* Moon icon (🌔) on the left side in night mode */
+        .slider .icon.moon {
+            left: 5px;
+            opacity: 0;
+        }
+
+        /* Show moon icon and hide sun icon in dark mode */
+        body.dark-mode .slider .icon.sun {
+            opacity: 0;
+        }
+
+        body.dark-mode .slider .icon.moon {
+            opacity: 1;
+        }
+
+        /* Dark mode slider background */
+        body.dark-mode .slider {
+            background-color: #4f5b66;
         }
     </style>
 </head>
-<body>
+<body class="dark-mode">
     <h1>Realtime Synced Text Field</h1>
     <textarea id="shared-text"></textarea>
 
-    <script>
-        const textarea = document.getElementById("shared-text");
+    <!-- Slider for Light/Dark Mode -->
+    <div class="slider-container">
+        <div id="mode-switch" class="slider">
+            <div class="toggle"></div>
+            <span class="icon sun">☀️</span>
+            <span class="icon moon">🌔</span>
+        </div>
+    </div>
 
-        // Dynamically determine WebSocket URL
+    <script>
+        const body = document.body;
+        const slider = document.getElementById('mode-switch');
+
+        // Check localStorage for the preferred mode
+        const savedMode = localStorage.getItem('mode');
+        if (savedMode) {
+            body.classList.remove('light-mode', 'dark-mode');
+            body.classList.add(savedMode);
+        } else {
+            // Default to dark mode
+            body.classList.add('dark-mode');
+        }
+
+        // Add event listener for the toggle switch
+        slider.addEventListener('click', () => {
+            // Toggle between light and dark mode
+            const currentMode = body.classList.contains('dark-mode') ? 'dark-mode' : 'light-mode';
+            const newMode = currentMode === 'dark-mode' ? 'light-mode' : 'dark-mode';
+
+            body.classList.remove(currentMode);
+            body.classList.add(newMode);
+
+            // Save the preference to localStorage
+            localStorage.setItem('mode', newMode);
+        });
+
+        // WebSocket logic (unchanged from your original)
+        const textarea = document.getElementById("shared-text");
         const websocketUrl = (() => {
             const isIPAddress = /^[0-9.]+$/.test(location.hostname);
             const isLocalhost = location.hostname === "localhost";
             const protocol = location.protocol === "https:" ? "wss://" : "ws://";
 
             if (isIPAddress || isLocalhost) {
-                // For IP addresses or localhost, use port 8765 and include the path
                 return `${protocol}${location.hostname}:8765${location.pathname}`;
             } else {
-                // For domains, use /ws as the base and append the path
                 const path = location.pathname === "/" ? "" : location.pathname;
                 return `${protocol}${location.hostname}/ws${path}`;
             }
         })();
 
-        console.log("WebSocket URL:", websocketUrl); // Debugging
+        console.log("WebSocket URL:", websocketUrl);
 
-        // Establish the WebSocket connection
         const socket = new WebSocket(websocketUrl);
 
-        // Receive updates from the server
         socket.addEventListener("message", (event) => {
             const text = event.data;
             if (text !== textarea.value) {
@@ -58,17 +192,14 @@
             }
         });
 
-        // Handle WebSocket errors
         socket.addEventListener("error", (error) => {
             console.error("WebSocket error:", error);
         });
 
-        // Handle WebSocket closure
         socket.addEventListener("close", () => {
             console.warn("WebSocket connection closed.");
         });
 
-        // Send updates to the server when the textarea value changes
         textarea.addEventListener("input", () => {
             if (socket.readyState === WebSocket.OPEN) {
                 socket.send(textarea.value);
