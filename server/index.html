@@ -3,197 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Light/Dark Mode Switch</title>
+    <title>Ghostboard</title>
     <style>
-        /* General body styling */
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            transition: background-color 0.3s, color 0.3s;
-            position: relative; /* Allows absolute positioning for the slider */
         }
-
-        /* Dark mode styling */
-        .dark-mode {
-            background-color: #343541;
-            color: #d1d5db;
-        }
-
-        /* Light mode styling */
-        .light-mode {
-            background-color: #ffffff;
-            color: #333333;
-        }
-
-        /* Header styling */
-        h1 {
-            font-size: 2.5em;
-            font-weight: bold;
-            margin-bottom: 20px;
-            text-align: center;
-            transition: color 0.3s, text-shadow 0.3s;
-            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.4);
-        }
-
-        /* Header styling for light mode */
-        .light-mode h1 {
-            color: #007acc;
-            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Textarea styling */
         textarea {
             width: 80%;
             height: 300px;
             font-size: 16px;
-            padding: 20px;
-            border: 1px solid;
-            border-radius: 15px;
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s;
-            overflow-y: auto;
-            resize: both;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
         }
-
-        /* Textarea styling for dark mode */
-        .dark-mode textarea {
-            background-color: #40414f;
-            color: #e5e7eb;
-            border-color: #3e4048;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
-        }
-
-        /* Focus styling for dark mode */
-        .dark-mode textarea:focus {
-            border-color: #10a37f;
-            box-shadow: 0 4px 15px rgba(16, 163, 127, 0.6);
-        }
-
-        /* Textarea styling for light mode */
-        .light-mode textarea {
-            background-color: #0000FF;
-            color: #333333;
-            border-color: #cccccc;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Focus styling for light mode */
-        .light-mode textarea:focus {
-            border-color: #007acc;
-            box-shadow: 0 4px 15px rgba(0, 122, 204, 0.6);
-        }
-
-        /* Scrollbar styling */
-        textarea::-webkit-scrollbar {
-            width: 10px;
-        }
-
-        textarea::-webkit-scrollbar-track {
-            background: #e5e7eb;
-        }
-
-        .dark-mode textarea::-webkit-scrollbar-track {
-            background: #3e4048;
-        }
-
-        textarea::-webkit-scrollbar-thumb {
-            background: #a0aec0;
-            border-radius: 10px;
-        }
-
-        .dark-mode textarea::-webkit-scrollbar-thumb {
-            background: #52525b;
-        }
-
-        textarea::-webkit-scrollbar-thumb:hover {
-            background: #718096;
-        }
-
-        /* Slider Container */
-        .slider-container {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            display: flex;
-            align-items: center;
-        }
-
-        /* Slider background */
-        .slider {
-            position: relative;
-            width: 40px;
-            height: 20px;
-            background-color: #4f5b66;
-            border-radius: 15px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 5px 8px; /* Space for icons */
-        }
-
-        /* Sun icon (left side) */
-        .slider::before {
-            content: '☀️';
-            color: #f1c40f;
-            position: absolute;
-            right: 4px;
-            top: 50%;
-            transform: translateY(-50%);
-            transition: opacity 0.3s;
-        }
-
-        /* Moon icon (right side) */
-        .slider::after {
-            content: '😎';
-            color: #ffffff;
-            position: absolute;
-            left: 4px;
-            top: 50%;
-            transform: translateY(-50%);
-            transition: opacity 0.3s;
-            opacity: 0; /* Initially hidden */
-        }
-
-        /* Movable toggle switch */
-        .slider .toggle {
-            position: absolute;
-            top: 3px;
-            left: 4px;
-            width: 24px;
-            height: 24px;
-            background-color: white;
-            border-radius: 50%;
-            transition: left 0.3s ease-in-out, background-color 0.3s ease-in-out;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-        }
-
-        /* Move the toggle to the right in dark mode */
-        .dark-mode .slider .toggle {
-            left: 30px;
-        }
-
-        /* Fade out sun in dark mode */
-        .dark-mode .slider::before {
-            opacity: 0;
-        }
-
-        /* Make moon more visible in dark mode */
-        .dark-mode .slider::after {
-            opacity: 1;
-        }
-
     </style>
 </head>
-<body class="dark-mode">
+<body>
     <h1>Realtime Synced Text Field</h1>
     <textarea id="shared-text"></textarea>
 
-    <!-- WebSocket Logik -->
     <script>
         const textarea = document.getElementById("shared-text");
 
@@ -203,8 +35,14 @@
             const isLocalhost = location.hostname === "localhost";
             const protocol = location.protocol === "https:" ? "wss://" : "ws://";
 
-            // WebSocket-URL anpassen, um den neuen Pfad /ws zu verwenden und den gleichen Port wie der HTTP-Server zu nutzen
-            return `${protocol}${location.host}/ws${location.pathname}`;
+            if (isIPAddress || isLocalhost) {
+                // For IP addresses or localhost, use port 8765 and include the path
+                return `${protocol}${location.hostname}:8765${location.pathname}`;
+            } else {
+                // For domains, use /ws as the base and append the path
+                const path = location.pathname === "/" ? "" : location.pathname;
+                return `${protocol}${location.hostname}/ws${path}`;
+            }
         })();
 
         console.log("WebSocket URL:", websocketUrl); // Debugging
@@ -239,32 +77,5 @@
             }
         });
     </script>
-
-    <!-- Slider for Light/Dark Mode -->
-    <div class="slider-container">
-        <div id="mode-switch" class="slider">
-            <div class="toggle"></div>
-        </div>
-    </div>
-
-
-<script>
-    // Select the body element to modify its class
-    const body = document.body;
-
-    // Select the slider element (toggle switch)
-    const slider = document.getElementById('mode-switch');
-
-    // Add an event listener to detect when the slider is clicked
-    slider.addEventListener('click', () => {
-        // Toggle the 'dark-mode' class on the body element
-        // If 'dark-mode' is present, it gets removed; otherwise, it is added
-        body.classList.toggle('dark-mode');
-    });
-</script>
-
-
-
 </body>
-
 </html>
