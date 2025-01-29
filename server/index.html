@@ -255,6 +255,8 @@
         // Clear button functionality
         clearButton.addEventListener('click', () => {
             textarea.value = '';
+            // 🔴 Manually trigger WebSocket update
+           sendTextUpdate();
         });
 
         // Drag and Drop Functionality
