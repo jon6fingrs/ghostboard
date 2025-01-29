@@ -158,6 +158,31 @@
         body.dark-mode button {
             color: white;
         }
+        /* Highlighted state when dragging over */
+        .textarea-dragover {
+            border: 2px dashed #4caf50 !important;  /* Green dashed border */
+            background-color: #f0fff0 !important;   /* Light green background */
+            color: #000 !important;                 /* Darker text for visibility */
+            position: relative;
+        }
+
+        /* Floating text message */
+        .textarea-dragover::before {
+            content: "Drop file here";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            font-weight: bold;
+            color: #4caf50;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px 15px;
+            border-radius: 5px;
+            pointer-events: none;
+        }
+
+
     </style>
 </head>
 <body class="dark-mode">
@@ -218,6 +243,60 @@
         // Clear button functionality
         clearButton.addEventListener('click', () => {
             textarea.value = '';
+        });
+
+        // Drag and Drop Functionality
+        textarea.addEventListener("dragover", (event) => {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = "copy"; // Show a copy icon
+        });
+
+        // Drag and Drop Functionality
+        textarea.addEventListener("dragover", (event) => {
+            event.preventDefault();
+            textarea.classList.add("textarea-dragover"); // Apply the visual effect
+        });
+
+        textarea.addEventListener("dragleave", () => {
+            textarea.classList.remove("textarea-dragover"); // Remove effect when dragging out
+        });
+
+        textarea.addEventListener("drop", (event) => {
+            event.preventDefault();
+            textarea.classList.remove("textarea-dragover"); // Remove effect after drop
+
+            const file = event.dataTransfer.files[0];
+
+            if (file) {
+                if (file.type.startsWith("text/") || file.name.match(/\.(txt|csv|md|html|json|xml)$/)) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        textarea.value = e.target.result; // Insert file content into textarea
+                    };
+                    reader.readAsText(file);
+                } else {
+                    alert("Only text-based files are supported!");
+                }
+            }
+        });
+
+
+        textarea.addEventListener("drop", (event) => {
+            event.preventDefault();
+
+            const file = event.dataTransfer.files[0];
+
+            if (file) {
+                if (file.type.startsWith("text/") || file.name.endsWith(".txt") || file.name.endsWith(".csv") || file.name.endsWith(".md") || file.name.endsWith(".html") || file.name.endsWith(".json") || file.name.endsWith(".xml")) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        textarea.value = e.target.result; // Insert the file content into textarea
+                    };
+                    reader.readAsText(file);
+                } else {
+                    alert("Only text-based files are supported!");
+                }
+            }
         });
 
         // WebSocket logic
