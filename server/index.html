@@ -182,6 +182,15 @@
             pointer-events: none;
         }
 
+        button.open {
+            background-color: #008CBA; /* Blue */
+            color: white;
+        }
+
+        button.open:hover {
+            background-color: #0073a8;
+        }
+
 
     </style>
 </head>
@@ -190,9 +199,12 @@
     <textarea id="shared-text"></textarea>
 
     <div class="button-container">
+        <button id="open-button" class="open">Open</button>
         <button id="copy-button" class="copy">Copy</button>
         <button id="clear-button" class="clear">Clear</button>
     </div>
+
+    <input type="file" id="file-input" accept=".txt,.csv,.md,.html,.json,.xml" style="display: none;">
 
     <div class="slider-container">
         <div id="mode-switch" class="slider">
@@ -339,6 +351,35 @@
                 console.error("WebSocket is not open.");
             }
         });
+
+        const openButton = document.getElementById("open-button");
+        const fileInput = document.getElementById("file-input");
+
+        // Open file dialog when the "Open" button is clicked
+        openButton.addEventListener("click", () => {
+            fileInput.click(); // Triggers the hidden file input
+        });
+
+        // Handle file selection and load content into textarea
+        fileInput.addEventListener("change", (event) => {
+            const file = event.target.files[0]; // Get the selected file
+
+            if (file) {
+                if (file.type.startsWith("text/") || file.name.match(/\.(txt|csv|md|html|json|xml)$/)) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        textarea.value = e.target.result; // Load content into textarea
+                    };
+                    reader.readAsText(file);
+                } else {
+                    alert("Only text-based files are supported!");
+                }
+            }
+
+            // Reset file input so the same file can be opened again if needed
+            fileInput.value = "";
+        });
+
     </script>
 </body>
 </html>
