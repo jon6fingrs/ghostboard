@@ -99,19 +99,16 @@
             transition: opacity 0.3s;
         }
 
-        /* Sun icon (☀️) on the right side in day mode */
         .slider .icon.sun {
             right: 5px;
             opacity: 1;
         }
 
-        /* Moon icon (🌔) on the left side in night mode */
         .slider .icon.moon {
             left: 5px;
             opacity: 0;
         }
 
-        /* Show moon icon and hide sun icon in dark mode */
         body.dark-mode .slider .icon.sun {
             opacity: 0;
         }
@@ -120,9 +117,46 @@
             opacity: 1;
         }
 
-        /* Dark mode slider background */
         body.dark-mode .slider {
             background-color: #4f5b66;
+        }
+
+        /* Button styles */
+        .button-container {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        button.copy {
+            background-color: #4caf50;
+            color: white;
+        }
+
+        button.copy:hover {
+            background-color: #45a049;
+        }
+
+        button.clear {
+            background-color: #f44336;
+            color: white;
+        }
+
+        button.clear:hover {
+            background-color: #e53935;
+        }
+
+        body.dark-mode button {
+            color: white;
         }
     </style>
 </head>
@@ -130,7 +164,11 @@
     <h1>Realtime Synced Text Field</h1>
     <textarea id="shared-text"></textarea>
 
-    <!-- Slider for Light/Dark Mode -->
+    <div class="button-container">
+        <button id="copy-button" class="copy">Copy</button>
+        <button id="clear-button" class="clear">Clear</button>
+    </div>
+
     <div class="slider-container">
         <div id="mode-switch" class="slider">
             <div class="toggle"></div>
@@ -142,6 +180,9 @@
     <script>
         const body = document.body;
         const slider = document.getElementById('mode-switch');
+        const textarea = document.getElementById('shared-text');
+        const copyButton = document.getElementById('copy-button');
+        const clearButton = document.getElementById('clear-button');
 
         // Check localStorage for the preferred mode
         const savedMode = localStorage.getItem('mode');
@@ -149,25 +190,37 @@
             body.classList.remove('light-mode', 'dark-mode');
             body.classList.add(savedMode);
         } else {
-            // Default to dark mode
             body.classList.add('dark-mode');
         }
 
-        // Add event listener for the toggle switch
         slider.addEventListener('click', () => {
-            // Toggle between light and dark mode
             const currentMode = body.classList.contains('dark-mode') ? 'dark-mode' : 'light-mode';
             const newMode = currentMode === 'dark-mode' ? 'light-mode' : 'dark-mode';
 
             body.classList.remove(currentMode);
             body.classList.add(newMode);
 
-            // Save the preference to localStorage
             localStorage.setItem('mode', newMode);
         });
 
-        // WebSocket logic (unchanged from your original)
-        const textarea = document.getElementById("shared-text");
+        // Copy button functionality
+        copyButton.addEventListener('click', () => {
+            navigator.clipboard.writeText(textarea.value).then(() => {
+                copyButton.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyButton.textContent = 'Copy';
+                }, 5000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        });
+
+        // Clear button functionality
+        clearButton.addEventListener('click', () => {
+            textarea.value = '';
+        });
+
+        // WebSocket logic
         const websocketUrl = (() => {
             const isIPAddress = /^[0-9.]+$/.test(location.hostname);
             const isLocalhost = location.hostname === "localhost";
