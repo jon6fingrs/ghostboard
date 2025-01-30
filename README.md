@@ -12,8 +12,12 @@ This project is aimed at self-hosters who want to quickly and easily share text 
   - Serves a webpage with a real-time synchronized text field.
   - Clients see live updates as text is typed.
   - Text remains synchronized across all connected clients.
-  - **New Feature**: Dynamically create multiple boards based on the URL path. Each unique subdirectory (e.g., /test or /example) hosts an independent board with its own synchronized text field.
-  - **New Feature**: Added Dark Mode and improved styling. Refined CSS for better readability and transitions. Implemented an iOS-style toggle switch for theme switching. Added simple icon.
+  - Dynamically create multiple boards based on the URL path. Each unique subdirectory (e.g., /test or /example) hosts an independent board with its own synchronized text field.
+  - Added Dark Mode and improved styling. Refined CSS for better readability and transitions. Implemented an iOS-style toggle switch for theme switching. Added simple icon.
+  - **New Feature (v3.0.0)**: Nonintrusive corner tabs with quarter-circle expansions:
+    - **Left Tab**: Displays project information (name, author, version).
+    - **Right Tab**: Expands to a clickable GitHub link with a large icon.
+  - **New Feature (v3.0.0)**: WebSocket connection handling improvements, including error messages and a reload option.
 
 - **Client**:
   - Command-line tool to retrieve or update the shared text.
