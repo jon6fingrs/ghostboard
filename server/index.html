@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,6 +13,12 @@
             flex-direction: column;
             align-items: center;
             transition: background-color 0.3s, color 0.3s;
+        }
+
+        h1 {
+            text-align: center;
+            white-space: normal;
+            overflow-wrap: break-word; /* Ensures full words wrap naturally */
         }
 
         /* Default dark mode styles */
@@ -195,7 +202,7 @@
     </style>
 </head>
 <body class="dark-mode">
-    <h1>Realtime Synced Text Field</h1>
+    <h1>Ghostboard</h1>
     <textarea id="shared-text"></textarea>
 
     <div class="button-container">
