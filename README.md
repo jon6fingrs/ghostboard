@@ -235,7 +235,7 @@ error_page 404 /index.html;
 ![Project Information](screenshots/project-info.webp)
 
 <!-- GitHub Link -->
-![GitHub Link](screenshots/gitHub-link.webp)
+![GitHub Link](screenshots/github-link.webp)
 
 <!-- Connection Lost -->
 ![Connection Lost](screenshots/connection-lost.webp)
