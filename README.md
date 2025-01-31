@@ -223,6 +223,25 @@ error_page 404 /index.html;
 
 ---
 
+## Screenshots
+
+<!-- Light Mode -->
+![Light Mode](screenshots/light-mode.webp)
+
+<!-- Dark Mode -->
+![Dark Mode](screenshots/dark-mode.webp)
+
+<!-- Project Info -->
+![Project Information](screenshots/project-info.webp)
+
+<!-- GitHub Link -->
+![GitHub Link](screenshots/GitHub-link.webp)
+
+<!-- Connection Lost -->
+![Connection Lost](screenshots/connection-lost.webp)
+
+---
+
 ## Contributing
 
 Contributions are welcome! Feel free to open an issue or submit a pull request to improve the project.
