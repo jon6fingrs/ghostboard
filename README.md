@@ -1,3 +1,10 @@
+# NEED HELP
+Thanks to /u/jack3308's awesome suggestion to add Markdown, I think I have managed to get it working really well. I have updated the files in this repo with the latest code in the main branch. I have also pushed a docker image with the tag ":beta-markdown-2" but I did not want to overwrite the "latest" tag yet. Before I possibly push a docker image with some unresolved issues. I was hoping that anyone who is willing could check out the latest update and let me know if there are any issues? I will continue to test it myself and if there are no issues, I will update everything to reflect this awesome addition!!!
+
+Another really cool side effect of this addition is that you can have two windows open on the same computer. One in regular markdown and one in preview markdown, you can type in the regular markdown and in real-time, see how it is rendered without having to manually switch back and forth! Seems like a pretty cool "side-effect" and only goes to add to the usefulness available!!!
+
+Any issues and please please please file a report. Thank you!
+
 # Ghostboard
 
 Ghostboard is a lightweight, self-hosted solution for real-time synchronized text sharing. This repository includes a WebSocket server for syncing text across multiple clients and a command-line client for retrieving or updating the shared text.
