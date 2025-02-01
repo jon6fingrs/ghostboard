@@ -68,6 +68,7 @@ ghostboard/
    ```bash
    docker pull thehelpfulidiot/ghostboard-server
    ```
+   - Use tag `latest-arm64` for arm release.
 
 2. Run the server container:
    ```bash
@@ -109,6 +110,7 @@ ghostboard/
    ```bash
    docker pull thehelpfulidiot/ghostboard-client
    ```
+   - Use tag `latest-arm64` for arm release.
 
 2. Retrieve the current text:
    ```bash
@@ -242,19 +244,25 @@ error_page 404 /index.html;
 ## Screenshots
 
 <!-- Light Mode -->
-![Light Mode](screenshots/light-mode.webp)
+![Light Mode Text Editor](screenshots/lightmode-text.png)
+
+<!-- Light Mode -->
+![Light Mode Text Editor](screenshots/lightmode-markdown.png)
 
 <!-- Dark Mode -->
-![Dark Mode](screenshots/dark-mode.webp)
+![Dark Mode Text Editor](screenshots/darkmode-text.png)
+
+<!-- Dark Mode -->
+![Dark Mode Text Editor](screenshots/darkmode-markdown.png)
 
 <!-- Project Info -->
-![Project Information](screenshots/project-info.webp)
+![Project Information](screenshots/project-info.png)
 
 <!-- GitHub Link -->
-![GitHub Link](screenshots/github-link.webp)
+![GitHub Link](screenshots/github-link.png)
 
 <!-- Connection Lost -->
-![Connection Lost](screenshots/connection-lost.webp)
+![Connection Lost](screenshots/connection-lost.png)
 
 ---
 
