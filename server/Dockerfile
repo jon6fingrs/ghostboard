@@ -8,6 +8,7 @@ WORKDIR /app
 COPY get_text.py /app/
 COPY index.html /app/
 COPY requirements.txt /app/
+COPY static /app/static
 
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
