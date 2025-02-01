@@ -3,6 +3,7 @@ import websockets
 from aiohttp import web
 from collections import defaultdict
 import threading
+import os
 
 # Store text for each path dynamically
 text_store = defaultdict(str)
@@ -65,17 +66,41 @@ async def websocket_handler(websocket, path):
             clear_text_timers[path] = threading.Timer(300, clear_shared_text, args=[path])
             clear_text_timers[path].start()
 
-# Serve the static HTML file
-async def handle_index(request):
-    return web.FileResponse("index.html")
+# Serve static files and index.html as a fallback
+async def handle_request(request):
+    raw_path = request.match_info['path']
+    print(f"Requested path: {raw_path}")
+
+    # Handle static files
+    if raw_path.startswith("static/"):
+        file_path = os.path.join("static", raw_path[len("static/"):])
+        print(f"Resolved static file path: {file_path}")
+
+        if os.path.exists(file_path) and os.path.isfile(file_path):
+            return web.FileResponse(file_path)
+        else:
+            # Static file not found, return 404
+            raise web.HTTPNotFound(text=f"Static file not found: {raw_path}")
+
+    # Serve index.html for all "virtual board" paths or root
+    if raw_path == "" or not raw_path.startswith("static/"):
+        print("Serving index.html for board")
+        return web.FileResponse("index.html")
+
+    # Fallback for any other unhandled case
+    raise web.HTTPNotFound(text=f"Path not found: {raw_path}")
+
+
 
 # Main function to start the servers
 async def main():
-    # Create an aiohttp app for serving static files
+    # Create an aiohttp app
     app = web.Application()
-    app.router.add_get("/{path:.*}", handle_index)  # Serve index.html for all paths
 
-    # Start the HTTP server for static files
+    # Use our custom handler for ALL GET requests
+    app.router.add_get("/{path:.*}", handle_request)
+    
+    # Start the HTTP server for static files + boards
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", 8080)
@@ -83,15 +108,16 @@ async def main():
 
     print("HTTP server running on http://0.0.0.0:8080")
 
-    # Start the WebSocket server with dynamic paths
+    # Start the WebSocket server
     ws_server = await websockets.serve(websocket_handler, "0.0.0.0", 8765)
     print("WebSocket server running on ws://0.0.0.0:8765")
 
     # Keep the servers running
     try:
-        await asyncio.Future()  # Keep running forever
+        await asyncio.Future()  # run forever
     except asyncio.CancelledError:
         print("Server shutting down...")
+
 
 if __name__ == "__main__":
     asyncio.run(main())
