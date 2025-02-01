@@ -29,7 +29,7 @@ def format_server_url(server_input):
         return f"ws://{server_address}:8765{path}"  # Default to ws:// with port 8765 for IPs
 
     # Assume it is a domain name
-    return f"wss://{server_address}:443{path}"  # Default to wss:// with port 443 for domains
+    return f"wss://{server_address}:443/ws{path}"  # Default to wss:// with port 443 for domains
 
 
 async def get_shared_text(server_url):
