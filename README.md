@@ -125,6 +125,11 @@ ghostboard/
    cat text.txt | docker run --rm -i thehelpfulidiot/ghostboard-client <server-ip> -
    ```
 
+5. Update file from text:
+   ```bash
+   docker run --rm -i thehelpfulidiot/ghostboard-client <server-ip> > text.txt
+   ```
+
 #### Using Python
 
 1. Navigate to the `client/` directory:
@@ -179,6 +184,16 @@ cat text.txt | python3 client/text_client.py example.com -
 Output:
 ```
 Text updated successfully.
+```
+
+### Update File from Text
+```bash
+python3 client/text_client.py example.com > text.txt
+```
+
+Output:
+```
+Connecting to: wss://example.com:443/ws.
 ```
 
 ---
