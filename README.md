@@ -18,6 +18,7 @@ This project is aimed at self-hosters who want to quickly and easily share text 
     - **Left Tab**: Displays project information (name, author, version).
     - **Right Tab**: Expands to a clickable GitHub link with a large icon.
   - **New Feature (v3.0.0)**: WebSocket connection handling improvements, including error messages and a reload option.
+  - **New Feature (v3.1.0)**: FULL MARKDOWN SUPPORT- thanks to /u/jack3308 for the suggestion!
 
 - **Client**:
   - Command-line tool to retrieve or update the shared text.
