@@ -658,19 +658,45 @@
 
     // Build the correct WebSocket URL
     const websocketUrl = (() => {
+      // Check if the hostname is an IP address or localhost.
       const isIPAddress = /^[0-9.]+$/.test(location.hostname);
       const isLocalhost = location.hostname === "localhost";
+      
+      // Determine the WebSocket protocol.
       const protocol = location.protocol === "https:" ? "wss://" : "ws://";
 
-      if (isIPAddress || isLocalhost) {
+      // Synchronously check for the existence of /static/docker_env.
+      // If the file exists, we assume we're running in Docker.
+      const IN_DOCKER = (() => {
+        const xhr = new XMLHttpRequest();
+        try {
+          xhr.open("HEAD", "/static/docker_env", false); // synchronous request
+          xhr.send(null);
+          return xhr.status >= 200 && xhr.status < 400;
+        } catch (e) {
+          return false;
+        }
+      })();
+      console.error("IN_DOCKER", IN_DOCKER);
+
+      // If accessing by IP or localhost, always use port 8765.
+      if ((isIPAddress || isLocalhost) && !IN_DOCKER) {
         return `${protocol}${location.hostname}:8765${location.pathname}`;
       } else {
-        const path = location.pathname === "/" ? "" : location.pathname;
-        return `${protocol}${location.hostname}/ws${path}`;
+        // Accessing by a domain name
+        if (IN_DOCKER || location.protocol === "https:") {
+          // When in Docker (reverse proxy), use /ws prefix.
+          const path = location.pathname === "/" ? "" : location.pathname;
+          return `${protocol}${location.hostname}/ws${path}`;
+        } else {
+          // Otherwise, use port 8765.
+          return `${protocol}${location.hostname}:8765${location.pathname}`;
+        }
       }
     })();
 
     console.log("WebSocket URL:", websocketUrl);
+
 
     socket = new WebSocket(websocketUrl);
 
