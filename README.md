@@ -19,6 +19,7 @@ This project is aimed at self-hosters who want to quickly and easily share text 
     - **Right Tab**: Expands to a clickable GitHub link with a large icon.
   - **New Feature (v3.0.0)**: WebSocket connection handling improvements, including error messages and a reload option.
   - **New Feature (v3.1.0)**: FULL MARKDOWN SUPPORT- thanks to /u/jack3308 for the suggestion!
+  - **New Feature (v3.2.0)**: BUNDLED NGINX IN DOCKER! Can simply open port 80 now and not worried about complex reverse proxy routing.
 
 - **Client**:
   - Command-line tool to retrieve or update the shared text.
@@ -74,9 +75,13 @@ ghostboard/
    ```bash
    docker run --rm -p 8080:8080 -p 8765:8765 thehelpfulidiot/ghostboard-server
    ```
+   As of v3.2.0, one could instead simply open port 80 and it will work fine. Above is deprecated:
+   ```bash
+   docker run --rm -p 8080:80 thehelpfulidiot/ghostboard-server
+   ```
 
-3. Access the server:
-   - Open `http://<server-ip>:8080` in your browser.
+4. Access the server:
+   - Open `http://<server-ip>:80` in your browser.
 
 #### Using Python
 
@@ -201,6 +206,8 @@ Connecting to: wss://example.com:443/ws.
 ---
 
 ## Reverse Proxy Configuration
+
+As of v3.2.0, this part is largely obsolete. One can simply point a reverse proxy to port 80 on the container and make sure websockets are enabled and it should work.
 
 Ghostboard can function behind a reverse proxy, requiring only a single exposed port for both HTTP and WebSocket traffic. To configure your reverse proxy:
 
