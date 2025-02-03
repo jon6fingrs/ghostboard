@@ -16,7 +16,9 @@ COPY index.html /app/
 COPY requirements.txt /app/
 COPY static /app/static
 
-RUN touch /app/static/docker_env
+
+# Update IN_DOCKER in index.html using sed
+RUN sed -i 's/const IN_DOCKER = false;/const IN_DOCKER = true;/' /app/index.html
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt

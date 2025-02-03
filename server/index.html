@@ -667,32 +667,29 @@
 
       // Synchronously check for the existence of /static/docker_env.
       // If the file exists, we assume we're running in Docker.
-      const IN_DOCKER = (() => {
-        const xhr = new XMLHttpRequest();
-        try {
-          xhr.open("HEAD", "/static/docker_env", false); // synchronous request
-          xhr.send(null);
-          return xhr.status >= 200 && xhr.status < 400;
-        } catch (e) {
-          return false;
-        }
-      })();
+      // Initial value to be replaced during Docker build.
+      const IN_DOCKER = false;  // This gets replaced with `true` by Docker's sed command.
+
       console.error("IN_DOCKER", IN_DOCKER);
 
-      // If accessing by IP or localhost, always use port 8765.
-      if ((isIPAddress || isLocalhost) && !IN_DOCKER) {
+      const metaTag = document.querySelector('meta[name="x-in-docker"]');
+      const nginx_forwarded = (metaTag && metaTag.getAttribute('content') === 'true') ? true : false;
+
+      console.error("nginx forwarded: ", nginx_forwarded);
+
+      // Step 1: Handle IP address or localhost when not in Docker
+      if ((isIPAddress || isLocalhost) && !nginx_forwarded) {
         return `${protocol}${location.hostname}:8765${location.pathname}`;
-      } else {
-        // Accessing by a domain name
-        if (IN_DOCKER || location.protocol === "https:") {
-          // When in Docker (reverse proxy), use /ws prefix.
-          const path = location.pathname === "/" ? "" : location.pathname;
-          return `${protocol}${location.hostname}/ws${path}`;
-        } else {
-          // Otherwise, use port 8765.
-          return `${protocol}${location.hostname}:8765${location.pathname}`;
-        }
       }
+
+      // Step 2: Handle Docker or HTTPS condition (use `/ws` prefix)
+      const path = location.pathname === "/" ? "" : location.pathname;
+      if (nginx_forwarded || location.protocol === "https:") {
+        return `${protocol}${location.hostname}:${location.port}/ws${path}`;
+      }
+
+      // Step 3: Default case, use port 8765
+      return `${protocol}${location.hostname}:8765${location.pathname}`;
     })();
 
     console.log("WebSocket URL:", websocketUrl);
@@ -759,27 +756,61 @@
      * the textarea or the markdown container.
      */
     function handleFileDrop(file) {
-      if (file) {
-        // Basic check to see if this is text-based
-        // We allow it if the type starts with 'text/' OR
-        // if the filename has a typical text-based extension
-        // (You can expand or remove if you like.)
+      if (!file) return;
+
+      isLikelyTextFile(file)
+        .then((isText) => {
+          if (isText) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              setCurrentText(e.target.result);
+              sendTextUpdate();
+            };
+            reader.readAsText(file);
+          } else {
+            alert("Only text-based files are supported!");
+          }
+        })
+        .catch((err) => {
+          console.error("Error checking file type:", err);
+          alert("Only text-based files are supported!");
+        });
+    }
+
+    function isLikelyTextFile(file) {
+      return new Promise((resolve, reject) => {
+        // 1. If the browser says it's text or if the extension matches
         const textLikeExtensions = /\.(txt|csv|md|markdown|html|htm|json|xml|yml|yaml|conf|ini|sh|py|js|css|log)$/i;
         if (
-          file.type.startsWith("text/") ||
+          (file.type && file.type.startsWith("text/")) ||
           textLikeExtensions.test(file.name)
         ) {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            setCurrentText(e.target.result);
-            sendTextUpdate();
-          };
-          reader.readAsText(file);
-        } else {
-          alert("Only text-based files are supported!");
+          return resolve(true);
         }
-      }
+
+        // 2. If not recognized as text, sample a portion of the file
+        const partialReader = new FileReader();
+
+        partialReader.onload = (event) => {
+          const arr = new Uint8Array(event.target.result);
+          // Simple heuristic: if we find a null byte (0x00), treat as binary
+          for (let i = 0; i < arr.length; i++) {
+            if (arr[i] === 0) {
+              return resolve(false);
+            }
+          }
+          // If no null bytes in the sample, we’ll guess it’s text
+          resolve(true);
+        };
+
+        partialReader.onerror = () => reject(new Error("File read error"));
+
+        // Read the first 1 KB (adjust as needed)
+        const blob = file.slice(0, 1024);
+        partialReader.readAsArrayBuffer(blob);
+      });
     }
+
 
     //--- TEXTAREA DRAG & DROP (green tinted background)
     textarea.addEventListener("dragover", (event) => {
