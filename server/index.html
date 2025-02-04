@@ -19,10 +19,26 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      transition: background-color 0.3s, color 0.3s;
-      position: relative; /* So we can place corners at bottom of the viewport */
-      min-height: 100vh;  /* Ensure full-screen height to keep corners pinned */
+      position: relative;
+      min-height: 100vh;
       box-sizing: border-box;
+      padding-bottom: 100px; /* Add padding to account for the bottom elements */
+    }
+
+    /* Sticky bottom container for elements */
+    .sticky-bottom-container {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 100px; /* Adjust height as needed */
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 200;
+      padding: 0 10px;
+      box-sizing: border-box;
+      background-color: transparent; /* Matches the body's background color */
     }
 
     h1 {
@@ -463,56 +479,55 @@
     style="display: none;"
   >
 
-  <!-- TWO SLIDERS (Dark/Light + Editor Mode) -->
-  <div class="slider-group">
-    <!-- Dark/Light Mode Slider -->
-    <div id="dark-light-switch" class="slider dark-light">
-      <div class="toggle"></div>
-      <span class="icon sun">☀️</span>
-      <span class="icon moon">🌔</span>
-    </div>
 
-    <!-- Editor Mode Slider -->
-    <div id="editor-switch" class="slider editor-mode">
-      <div class="toggle"></div>
-      <!-- use emojis for text vs markdown -->
-      <span class="icon text">🔤</span>
-      <span class="icon markdown">📝</span>
-    </div>
-  </div>
-
-  <!-- LEFT TRIANGLE TAB + QUARTER CIRCLE -->
-  <div class="tab-container left-tab-container" id="left-tab-container">
-    <div class="tab corner-triangle left-tab"></div>
-    <div class="expanded left-expanded" id="left-expanded">
-      <div class="tab-content">
-        <p>
-          <strong>Project:</strong> Ghostboard<br>
-          <strong>Author:</strong> jon6fingrs<br>
-          <strong>Version:</strong> 3.2.0
-        </p>
+  <div class="sticky-bottom-container">
+    <!-- LEFT TRIANGLE TAB -->
+    <div class="tab-container left-tab-container" id="left-tab-container">
+      <div class="tab corner-triangle left-tab"></div>
+      <div class="expanded left-expanded" id="left-expanded">
+        <div class="tab-content">
+          <p>
+            <strong>Project:</strong> Ghostboard<br>
+            <strong>Author:</strong> jon6fingrs<br>
+            <strong>Version:</strong> 3.2.0
+          </p>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- RIGHT TRIANGLE TAB + QUARTER CIRCLE -->
-  <div class="tab-container right-tab-container" id="right-tab-container">
-    <div class="tab corner-triangle right-tab"></div>
-    <div class="expanded right-expanded" id="right-expanded">
-      <div class="tab-content">
-        <a href="https://github.com/jon6fingrs/ghostboard" target="_blank" id="github-link">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-            <path
-              d="M12 0a12 12 0 00-3.79 23.4c.6.1.82-.26.82-.58v-2.05
-              c-3.34.72-4.04-1.6-4.04-1.6-.55-1.38-1.34-1.75-1.34-1.75-1.09-.74.08-.72.08-.72
-              1.21.08 1.85 1.24 1.85 1.24 1.07 1.83 2.8 1.3 3.48.99.1-.77.42-1.3.76-1.6
-              -2.66-.3-5.47-1.33-5.47-5.92 0-1.3.47-2.36 1.24-3.19-.12-.3-.54-1.52.12-3.18
-              0 0 1-.32 3.3 1.22A11.3 11.3 0 0112 5.8c1.02 0 2.04.14 2.99.4 2.32-1.54 3.31-1.22
-              3.31-1.22.66 1.66.24 2.88.12 3.18.77.83 1.24 1.9 1.24 3.19 0 4.6-2.82 5.6
-              -5.5 5.9.44.38.82 1.12.82 2.26v3.35c0 .32.22.69.82.58A12 12 0 0012 0z"
-            />
-          </svg>
-        </a>
+    <!-- SLIDER GROUP -->
+    <div id="slider-group" class="slider-group">
+      <div id="dark-light-switch" class="slider dark-light">
+        <div class="toggle"></div>
+        <span class="icon sun">☀️</span>
+        <span class="icon moon">🌔</span>
+      </div>
+      <div id="editor-switch" class="slider editor-mode">
+        <div class="toggle"></div>
+        <span class="icon text">🔤</span>
+        <span class="icon markdown">📝</span>
+      </div>
+    </div>
+
+    <!-- RIGHT TRIANGLE TAB -->
+    <div class="tab-container right-tab-container" id="right-tab-container">
+      <div class="tab corner-triangle right-tab"></div>
+      <div class="expanded right-expanded" id="right-expanded">
+        <div class="tab-content">
+          <a href="https://github.com/jon6fingrs/ghostboard" target="_blank" id="github-link">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path
+                d="M12 0a12 12 0 00-3.79 23.4c.6.1.82-.26.82-.58v-2.05
+                c-3.34.72-4.04-1.6-4.04-1.6-.55-1.38-1.34-1.75-1.34-1.75-1.09-.74.08-.72.08-.72
+                1.21.08 1.85 1.24 1.85 1.24 1.07 1.83 2.8 1.3 3.48.99.1-.77.42-1.3.76-1.6
+                -2.66-.3-5.47-1.33-5.47-5.92 0-1.3.47-2.36 1.24-3.19-.12-.3-.54-1.52.12-3.18
+                0 0 1-.32 3.3 1.22A11.3 11.3 0 0112 5.8c1.02 0 2.04.14 2.99.4 2.32-1.54 3.31-1.22
+                3.31-1.22.66 1.66.24 2.88.12 3.18.77.83 1.24 1.9 1.24 3.19 0 4.6-2.82 5.6
+                -5.5 5.9.44.38.82 1.12.82 2.26v3.35c0 .32.22.69.82.58A12 12 0 0012 0z"
+              />
+            </svg>
+          </a>
+        </div>
       </div>
     </div>
   </div>
@@ -661,7 +676,7 @@
       // Check if the hostname is an IP address or localhost.
       const isIPAddress = /^[0-9.]+$/.test(location.hostname);
       const isLocalhost = location.hostname === "localhost";
-      
+
       // Determine the WebSocket protocol.
       const protocol = location.protocol === "https:" ? "wss://" : "ws://";
 
