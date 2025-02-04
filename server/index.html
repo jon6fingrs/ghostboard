@@ -492,7 +492,7 @@
           <p>
             <strong>Project:</strong> Ghostboard<br>
             <strong>Author:</strong> jon6fingrs<br>
-            <strong>Version:</strong> 3.3.0
+            <strong>Version:</strong> 3.3.1
           </p>
         </div>
       </div>
@@ -747,37 +747,54 @@
     console.log("WebSocket URL:", websocketUrl);
 
 
-    socket = new WebSocket(websocketUrl);
+    let reconnectAttempts = 0;
+    let maxReconnectDelay = 30000;  // Maximum delay of 30 seconds
 
-    socket.addEventListener("open", () => {
-      console.log("WebSocket connection established.");
-      textarea.readOnly = false;
-      simplemde.codemirror.setOption("readOnly", false);
-      connectionStatus.style.display = 'none';
-    });
+    function connectWebSocket() {
+      socket = new WebSocket(websocketUrl);
 
-    // When a message arrives from the server:
-    socket.addEventListener("message", (event) => {
-      const newText = event.data;
-      // Only update the editor if it's actually different
-      if (newText !== getCurrentText()) {
-        // Prevent “on change” from firing
-        isProgrammaticChange = true;
-        setCurrentText(newText);
-        isProgrammaticChange = false;
-      }
-    });
+      socket.addEventListener("open", () => {
+        console.log("WebSocket connection established.");
+        textarea.readOnly = false;
+        simplemde.codemirror.setOption("readOnly", false);
+        connectionStatus.style.display = 'none';  // Hide alert
+        reconnectAttempts = 0;  // Reset attempts after successful connection
+      });
 
-    socket.addEventListener("error", (error) => {
-      console.error("WebSocket error:", error);
-    });
+      socket.addEventListener("message", (event) => {
+        const newText = event.data;
+        if (newText !== getCurrentText()) {
+          isProgrammaticChange = true;
+          setCurrentText(newText);
+          isProgrammaticChange = false;
+        }
+      });
 
-    socket.addEventListener("close", () => {
-      console.warn("WebSocket connection closed.");
-      textarea.readOnly = true;
-      simplemde.codemirror.setOption("readOnly", true);
-      connectionStatus.style.display = 'block';
-    });
+      socket.addEventListener("error", (error) => {
+        console.error("WebSocket error:", error);
+      });
+
+      socket.addEventListener("close", () => {
+        console.warn("WebSocket connection closed.");
+        textarea.readOnly = true;
+        simplemde.codemirror.setOption("readOnly", true);
+        connectionStatus.style.display = 'block';  // Show alert
+        retryConnection();  // Attempt to reconnect
+      });
+    }
+
+    function retryConnection() {
+      const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), maxReconnectDelay);
+      setTimeout(() => {
+        console.log(`Attempting to reconnect... (Attempt ${reconnectAttempts + 1})`);
+        reconnectAttempts++;
+        connectWebSocket();
+      }, delay);
+    }
+
+    // Initial WebSocket connection
+    connectWebSocket();
+
 
     /*********************************************
      *           COPY & CLEAR BUTTONS
