@@ -173,11 +173,13 @@
     }
 
     /* -- MARKDOWN MODE drag highlight: only green dashed border, no tinted bg -- */
-    .md-drop-target-dragover {
-      border: 2px dashed #4caf50 !important;
+    .CodeMirror.md-drop-target-dragover {
+      border: 2px dashed #4caf50 !important;  /* Outline the larger container */
+      background-color: rgba(240, 255, 240, 0.5); /* Light green overlay */
       position: relative;
     }
-    .md-drop-target-dragover::before {
+
+    .CodeMirror.md-drop-target-dragover::before {
       content: "Drop file here";
       position: absolute;
       top: 50%;
@@ -190,6 +192,7 @@
       padding: 10px 15px;
       border-radius: 5px;
       pointer-events: none;
+      z-index: 5;
     }
 
     /*--------------------------------------
@@ -657,6 +660,40 @@
         }
     });
 
+    // Track the drag state to prevent stale classes
+    let dragCounter = 0;
+
+    function handleDragOver(event) {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "copy";
+
+      // Only apply the class once
+      if (dragCounter === 0) {
+        codeMirrorContainer.classList.add("md-drop-target-dragover");
+      }
+
+      dragCounter++;  // Increment drag event count
+    }
+
+    function handleDragLeave() {
+      dragCounter--;  // Decrement drag event count
+
+      // Use a short delay to avoid race conditions
+      setTimeout(() => {
+        if (dragCounter <= 0) {
+          codeMirrorContainer.classList.remove("md-drop-target-dragover");
+          dragCounter = 0;  // Ensure the counter resets
+        }
+      }, 50);
+    }
+
+    function handleDrop(event) {
+      event.preventDefault();
+      codeMirrorContainer.classList.remove("md-drop-target-dragover");
+      dragCounter = 0;  // Reset drag counter on drop
+      const file = event.dataTransfer.files[0];
+      handleFileDrop(file);
+    }
 
     /*********************************************
      *        WEBSOCKET & MESSAGE HANDLING
@@ -844,20 +881,38 @@
     });
 
     //--- MARKDOWN CONTAINER DRAG & DROP (only dashed border)
-    markdownContainer.addEventListener("dragover", (event) => {
+    const codeMirrorContainer = document.querySelector(".CodeMirror");
+    const codeMirrorScrollContainer = document.querySelector(".CodeMirror-scroll");
+
+    // Add drag-and-drop listeners to both elements
+    if (codeMirrorContainer && codeMirrorScrollContainer) {
+      // Add event listeners to CodeMirror-scroll for detection
+      codeMirrorScrollContainer.addEventListener("dragover", handleDragOver);
+      codeMirrorScrollContainer.addEventListener("dragleave", handleDragLeave);
+      codeMirrorScrollContainer.addEventListener("drop", handleDrop);
+
+      // Also allow CodeMirror itself to react to drag events
+      codeMirrorContainer.addEventListener("dragover", handleDragOver);
+      codeMirrorContainer.addEventListener("dragleave", handleDragLeave);
+      codeMirrorContainer.addEventListener("drop", handleDrop);
+    }
+
+    function handleDragOver(event) {
       event.preventDefault();
       event.dataTransfer.dropEffect = "copy";
-      markdownContainer.classList.add("md-drop-target-dragover");
-    });
-    markdownContainer.addEventListener("dragleave", () => {
-      markdownContainer.classList.remove("md-drop-target-dragover");
-    });
-    markdownContainer.addEventListener("drop", (event) => {
+      codeMirrorContainer.classList.add("md-drop-target-dragover");
+    }
+
+    function handleDragLeave() {
+      codeMirrorContainer.classList.remove("md-drop-target-dragover");
+    }
+
+    function handleDrop(event) {
       event.preventDefault();
-      markdownContainer.classList.remove("md-drop-target-dragover");
+      codeMirrorContainer.classList.remove("md-drop-target-dragover");
       const file = event.dataTransfer.files[0];
       handleFileDrop(file);
-    });
+}
 
     /*********************************************
      *       OPEN BUTTON (FILE INPUT)
