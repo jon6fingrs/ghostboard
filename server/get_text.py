@@ -24,7 +24,12 @@ def clear_shared_text(path):
 # WebSocket handler
 async def websocket_handler(websocket, path):
     global text_store, clear_text_timers
-
+    if '/ws' in path.lower():
+        path = path.lower().replace('/ws', '')
+    else:
+        path = path.lower()
+    if path == '':
+        path = '/'
     # Add this client to the set for the path
     connected_clients[path].add(websocket)
 
@@ -66,31 +71,62 @@ async def websocket_handler(websocket, path):
             clear_text_timers[path] = threading.Timer(300, clear_shared_text, args=[path])
             clear_text_timers[path].start()
 
-# Serve static files and index.html as a fallback
 async def handle_request(request):
-    raw_path = request.match_info['path']
-    print(f"Requested path: {raw_path}")
+    # Normalize path and handle the '/ws' prefix
+    raw_path = "/" + request.match_info['path'].strip("/").lower()
 
-    # Handle static files
-    if raw_path.startswith("static/"):
-        file_path = os.path.join("static", raw_path[len("static/"):])
-        print(f"Resolved static file path: {file_path}")
+    # Adjust path to match how the WebSocket server handles paths
+    if raw_path.startswith("/ws"):
+        raw_path = raw_path[3:]  # Remove '/ws' prefix but keep leading slash
+        if not raw_path.startswith("/"):
+            raw_path = "/" + raw_path
 
+    # Debug log to confirm the path
+    print(f"REST request for normalized path: '{raw_path}'")
+
+    query_text = request.query.get('text')
+    get_text = request.query.get('get_text') == 'true'
+
+    # Handle text retrieval
+    if get_text:
+        if raw_path not in text_store:
+            text_store[raw_path] = ""  # Create the board dynamically if missing
+        print(f"Returning text for path '{raw_path}': {text_store[raw_path]}")
+        return web.Response(text=text_store[raw_path])
+
+    # Handle text updates
+    if query_text is not None:
+        if raw_path not in text_store:
+            text_store[raw_path] = ""
+            print(f"Created new board for path: '{raw_path}'")
+
+        text_store[raw_path] = query_text
+        print(f"Text for path '{raw_path}' updated to: {text_store[raw_path]}")
+
+        # Broadcast to WebSocket clients
+        disconnected_clients = []
+        for client in connected_clients[raw_path]:
+            try:
+                await client.send(text_store[raw_path])
+            except websockets.ConnectionClosed:
+                disconnected_clients.append(client)
+
+        for client in disconnected_clients:
+            connected_clients[raw_path].remove(client)
+
+        return web.Response(text="Text updated successfully.")
+
+    # Serve static files
+    if raw_path.startswith("/static/"):
+        file_path = os.path.join("static", raw_path[len("/static/"):])
         if os.path.exists(file_path) and os.path.isfile(file_path):
             return web.FileResponse(file_path)
         else:
-            # Static file not found, return 404
             raise web.HTTPNotFound(text=f"Static file not found: {raw_path}")
 
-    # Serve index.html for all "virtual board" paths or root
-    if raw_path == "" or not raw_path.startswith("static/"):
-        print("Serving index.html for board")
-        return web.FileResponse("index.html")
-
-    # Fallback for any other unhandled case
-    raise web.HTTPNotFound(text=f"Path not found: {raw_path}")
-
-
+    # Serve index.html for dynamic boards and root path
+    print(f"Serving index.html for path: '{raw_path}'")
+    return web.FileResponse("index.html")
 
 # Main function to start the servers
 async def main():
@@ -121,4 +157,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
