@@ -75,7 +75,7 @@ if __name__ == "__main__":
 
     if len(sys.argv) == 2:
         # Retrieve the current text
-        print(f"Connecting to: {server_url}", file=sys.stderr)
+      #  print(f"Connecting to: {server_url}", file=sys.stderr)
         asyncio.run(get_shared_text(server_url))
     elif len(sys.argv) == 3:
         # Update the shared text
