@@ -24,10 +24,12 @@ def clear_shared_text(path):
 # WebSocket handler
 async def websocket_handler(websocket, path):
     global text_store, clear_text_timers
-    if '/ws' in path.lower():
-        path = path.lower().replace('/ws', '')
+    if path.lower().startswith('/ws'):
+        path = path.lower()[3:]  # Remove the first 3 characters ("/ws")
     else:
         path = path.lower()
+
+    # Ensure that the path is not empty
     if path == '':
         path = '/'
     # Add this client to the set for the path
