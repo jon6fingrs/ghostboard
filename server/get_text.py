@@ -86,37 +86,39 @@ async def handle_request(request):
     # Debug log to confirm the path
     print(f"REST request for normalized path: '{raw_path}'")
 
-    query_text = request.query.get('text')
-    get_text = request.query.get('get_text') == 'true'
+    # Handle POST requests for text updates
+    if request.method == "POST":
+        data = await request.post()
+        query_text = data.get('text')
 
-    # Handle text retrieval
+        if query_text:
+            if raw_path not in text_store:
+                text_store[raw_path] = ""
+                print(f"Created new board for path: '{raw_path}'")
+
+            text_store[raw_path] = query_text
+            print(f"Text for path '{raw_path}' updated to: {text_store[raw_path]}")
+
+            # Broadcast to WebSocket clients
+            disconnected_clients = []
+            for client in connected_clients[raw_path]:
+                try:
+                    await client.send(text_store[raw_path])
+                except websockets.ConnectionClosed:
+                    disconnected_clients.append(client)
+
+            for client in disconnected_clients:
+                connected_clients[raw_path].remove(client)
+
+            return web.Response(text="Text updated successfully.")
+
+    # Handle text retrieval via GET request
+    get_text = request.query.get('get_text') == 'true'
     if get_text:
         if raw_path not in text_store:
             text_store[raw_path] = ""  # Create the board dynamically if missing
         print(f"Returning text for path '{raw_path}': {text_store[raw_path]}")
         return web.Response(text=text_store[raw_path])
-
-    # Handle text updates
-    if query_text is not None:
-        if raw_path not in text_store:
-            text_store[raw_path] = ""
-            print(f"Created new board for path: '{raw_path}'")
-
-        text_store[raw_path] = query_text
-        print(f"Text for path '{raw_path}' updated to: {text_store[raw_path]}")
-
-        # Broadcast to WebSocket clients
-        disconnected_clients = []
-        for client in connected_clients[raw_path]:
-            try:
-                await client.send(text_store[raw_path])
-            except websockets.ConnectionClosed:
-                disconnected_clients.append(client)
-
-        for client in disconnected_clients:
-            connected_clients[raw_path].remove(client)
-
-        return web.Response(text="Text updated successfully.")
 
     # Serve static files
     if raw_path.startswith("/static/"):
@@ -135,9 +137,10 @@ async def main():
     # Create an aiohttp app
     app = web.Application()
 
-    # Use our custom handler for ALL GET requests
+    # Use our custom handler for GET and POST requests
     app.router.add_get("/{path:.*}", handle_request)
-    
+    app.router.add_post("/{path:.*}", handle_request)
+
     # Start the HTTP server for static files + boards
     runner = web.AppRunner(app)
     await runner.setup()
@@ -155,7 +158,6 @@ async def main():
         await asyncio.Future()  # run forever
     except asyncio.CancelledError:
         print("Server shutting down...")
-
 
 if __name__ == "__main__":
     asyncio.run(main())
