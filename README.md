@@ -125,6 +125,8 @@ You can retrieve the current text from a board using a GET request.
 
 These commands work with dynamically created boards by appending the desired board path to the URL, such as `http://ghostboard-server:port/board-name`.
 
+### [Ghostboard iOS Shortcuts Integration](ios_shortcuts/ios_shortcuts_readme.md)
+
 ---
 
 ### Running the Client (Legacy)
