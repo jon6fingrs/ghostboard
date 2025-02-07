@@ -20,33 +20,15 @@ This project is aimed at self-hosters who want to quickly and easily share text 
   - **New Feature (v3.0.0)**: WebSocket connection handling improvements, including error messages and a reload option.
   - **New Feature (v3.1.0)**: FULL MARKDOWN SUPPORT- thanks to /u/jack3308 for the suggestion!
   - **New Feature (v3.2.0)**: BUNDLED NGINX IN DOCKER! Can simply open port 80 now and not worry about complex reverse proxy routing.
+  - **New Feature (v3.4.0)**: REST API support for updating and retrieving text.
 
-- **Client**:
+- **Client** (Legacy):
   - Command-line tool to retrieve or update the shared text.
   - Supports WebSocket servers using IPs or domain names.
+  - Still supported but superceded by REST API
 
 - **Dockerized**:
   - Both server and client are available as prebuilt Docker images for ease of deployment.
-
----
-
-## Repository Structure
-
-```
-ghostboard/
-├── client/                  # Client-related files
-│   ├── Dockerfile           # Dockerfile for the client
-│   ├── requirements.txt     # Python dependencies for the client
-│   ├── text_client.py       # Command-line client script
-├── server/                  # Server-related files
-│   ├── Dockerfile           # Dockerfile for the server
-│   ├── requirements.txt     # Python dependencies for the server
-│   ├── server.py            # WebSocket server script
-│   ├── index.html           # Webpage for real-time synchronization
-├── .gitignore               # Ignore unnecessary files
-├── LICENSE                  # Project license
-└── README.md                # This README file
-```
 
 ---
 
@@ -107,7 +89,45 @@ ghostboard/
 
 ---
 
-### Running the Client
+## REST API Usage
+
+### Updating Text
+
+You can update the text on a board using a POST request.
+
+**Examples:**
+
+- Update text from a file:
+  ```bash
+  curl -X POST "http://ghostboard-server:port" -d "text=$(cat example.txt)"
+  ```
+
+- Update text directly:
+  ```bash
+  curl -X POST "http://ghostboard-server:port" -d "text=example"
+  ```
+
+### Retrieving Text
+
+You can retrieve the current text from a board using a GET request.
+
+**Examples:**
+
+- Save the text to a file:
+  ```bash
+  curl "http://ghostboard-server:port?get_text=true" > ghostboard.txt
+  ```
+
+- Print the text to the terminal:
+  ```bash
+  curl "http://ghostboard-server:port?get_text=true"
+  ```
+
+These commands work with dynamically created boards by appending the desired board path to the URL, such as `http://ghostboard-server:port/board-name`.
+
+---
+
+### Running the Client (Legacy)
 
 #### Using Prebuilt Docker Image
 
