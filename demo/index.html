@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ghostboard (Demo)</title>
+
+
+
+  <!-- SimpleMDE CSS & JS (via CDN) -->
+  <link rel="stylesheet" href="/static/simplemde.min.css">
+
+
+
+  <script src="/static/simplemde.min.js"></script>
+
+
+
+  <style>
+    /*--------------------------------------
+      BASE GHOSTBOARD STYLES (mostly unchanged)
+    ---------------------------------------*/
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      min-height: 100vh;
+      box-sizing: border-box;
+      padding-bottom: 100px; /* Add padding to account for the bottom elements */
+    }
+    .sticky-bottom-container {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 100px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 200;
+      padding: 0 10px;
+      box-sizing: border-box;
+      background-color: transparent;
+    }
+    h1 {
+      text-align: center;
+      white-space: normal;
+      overflow-wrap: break-word;
+    }
+    body.dark-mode {
+      background-color: #343541;
+      color: #d1d5db;
+    }
+    textarea {
+      width: 80%;
+      height: 300px;
+      font-size: 16px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+    }
+    body.dark-mode textarea {
+      background-color: #40414f;
+      color: #e5e7eb;
+      border-color: #3e4048;
+    }
+    body.light-mode {
+      background-color: #ffffff;
+      color: #333333;
+    }
+    body.light-mode textarea {
+      background-color: #ffffff;
+      color: #333333;
+      border-color: #cccccc;
+    }
+    .button-container {
+      margin-top: 15px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    button.copy {
+      background-color: #4caf50;
+      color: white;
+    }
+    button.copy:hover {
+      background-color: #45a049;
+    }
+    button.clear {
+      background-color: #f44336;
+      color: white;
+    }
+    button.clear:hover {
+      background-color: #e53935;
+    }
+    button.open {
+      background-color: #008CBA;
+      color: white;
+    }
+    button.open:hover {
+      background-color: #0073a8;
+    }
+    button.demo {
+      background-color: #9c27b0;
+      color: white;
+    }
+    button.demo:hover {
+      background-color: #8e24aa;
+    }
+    #connection-status {
+      margin-top: 10px;
+      font-weight: bold;
+      color: red;
+      font-size: 14px;
+      text-align: center;
+      display: none;
+    }
+    #connection-status a {
+      color: red;
+      text-decoration: underline;
+      margin-left: 8px;
+      cursor: pointer;
+    }
+
+    .text-drop-target-dragover {
+      border: 2px dashed #4caf50 !important;
+      background-color: #f0fff0 !important;
+      color: #000 !important;
+      position: relative;
+    }
+    .text-drop-target-dragover::before {
+      content: "Drop file here";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 18px;
+      font-weight: bold;
+      color: #4caf50;
+      background-color: rgba(255, 255, 255, 0.8);
+      padding: 10px 15px;
+      border-radius: 5px;
+      pointer-events: none;
+    }
+
+    .slider-group {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 50;
+      display: flex;
+      gap: 30px;
+    }
+    .slider {
+      position: relative;
+      width: 50px;
+      height: 25px;
+      background-color: #ccc;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .slider .toggle {
+      position: absolute;
+      top: 2.5px;
+      width: 20px;
+      height: 20px;
+      background-color: white;
+      border-radius: 50%;
+      transition: left 0.3s ease-in-out, background-color 0.3s ease-in-out;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      left: 2.5px;
+    }
+    .slider.on .toggle {
+      left: 27.5px;
+    }
+    .slider .icon {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      color: #ffffff;
+      transition: opacity 0.3s;
+    }
+    .slider.dark-light .icon.sun {
+      right: 5px;
+      opacity: 1;
+    }
+    .slider.dark-light .icon.moon {
+      left: 5px;
+      opacity: 0;
+    }
+    .slider.dark-light.on .icon.sun {
+      opacity: 0;
+    }
+    .slider.dark-light.on .icon.moon {
+      opacity: 1;
+    }
+    body.dark-mode .slider.dark-light {
+      background-color: #4f5b66;
+    }
+    .slider.editor-mode .icon.text {
+      right: 5px;
+      opacity: 1;
+    }
+    .slider.editor-mode .icon.markdown {
+      left: 5px;
+      opacity: 0;
+    }
+    .slider.editor-mode.on .icon.text {
+      opacity: 0;
+    }
+    .slider.editor-mode.on .icon.markdown {
+      opacity: 1;
+    }
+    body.dark-mode .slider.editor-mode {
+      background-color: #4f5b66;
+    }
+    body.light-mode .slider.editor-mode {
+      background-color: #ccc;
+    }
+
+    .tab-container {
+      position: fixed;
+      width: 40px;
+      height: 40px;
+      z-index: 100;
+      cursor: pointer;
+    }
+    .tab {
+      width: 40px;
+      height: 40px;
+      position: absolute;
+    }
+    body.dark-mode .corner-triangle {
+      background-color: #60646c;
+    }
+    body.light-mode .corner-triangle {
+      background-color: #999;
+    }
+    .left-tab {
+      clip-path: polygon(0% 100%, 0% 0%, 100% 100%);
+    }
+    .right-tab {
+      clip-path: polygon(0% 100%, 100% 0%, 100% 100%);
+    }
+    .left-tab-container {
+      left: 0;
+      bottom: 0;
+    }
+    .right-tab-container {
+      right: 0;
+      bottom: 0;
+    }
+    .tab:hover {
+      transform: scale(1.1);
+    }
+    .expanded {
+      position: fixed;
+      width: 250px;
+      height: 250px;
+      background-color: #0073e6;
+      color: #fff;
+      overflow: hidden;
+      z-index: 110;
+      opacity: 0;
+      clip-path: circle(0% at 0% 100%);
+      transition: clip-path 0.5s ease, opacity 0.5s ease;
+    }
+    .expanded.show {
+      clip-path: circle(100% at 0% 100%);
+      opacity: 1;
+    }
+    .left-expanded {
+      bottom: 0;
+      left: 0;
+    }
+    .right-expanded {
+      bottom: 0;
+      right: 0;
+      clip-path: circle(0% at 100% 100%);
+    }
+    .right-expanded.show {
+      clip-path: circle(100% at 100% 100%);
+    }
+    .tab-content {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    .expanded.show .tab-content {
+      opacity: 1;
+    }
+    .left-expanded .tab-content p {
+      position: absolute;
+      left: 20px;
+      bottom: 20px;
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.4;
+    }
+    .right-expanded .tab-content a {
+      position: absolute;
+      right: 20px;
+      bottom: 20px;
+      text-decoration: none;
+    }
+    .right-expanded .tab-content svg {
+      width: 80px;
+      height: 80px;
+    }
+
+    #markdown-container {
+      width: 80%;
+      display: none;
+      border: 1px solid transparent;
+      border-radius: 5px;
+      position: relative;
+    }
+    body.dark-mode .CodeMirror {
+      background-color: #40414f !important;
+      color: #e5e7eb !important;
+    }
+    body.dark-mode .CodeMirror-gutters {
+      background-color: #40414f !important;
+      border-right: 1px solid #3e4048 !important;
+    }
+    body.dark-mode .CodeMirror-cursor {
+      border-left: 1px solid #e5e7eb !important;
+    }
+    body.dark-mode .editor-preview,
+    body.dark-mode .editor-preview-active {
+      background-color: #40414f !important;
+      color: #e5e7eb !important;
+    }
+    body.dark-mode .editor-toolbar {
+      background-color: #4f5b66 !important;
+      border-bottom: 1px solid #3e4048 !important;
+    }
+    body.dark-mode .editor-toolbar button,
+    body.dark-mode .editor-toolbar a,
+    body.dark-mode .editor-toolbar i,
+    body.dark-mode .editor-toolbar .fa {
+      color: #e5e7eb !important;
+    }
+    body.dark-mode .editor-toolbar button:hover,
+    body.dark-mode .editor-toolbar a:hover {
+      background-color: #60646c !important;
+    }
+
+    #read-only-banner {
+      margin-bottom: 20px;
+      padding: 10px;
+      border: 2px solid red;
+      border-radius: 5px;
+      color: red;
+      text-align: center;
+      width: 80%;
+      font-size: 1.1rem;
+    }
+  </style>
+</head>
+<body class="dark-mode">
+  <h1>Ghostboard (Demo Version)</h1>
+
+  <div id="read-only-banner">
+    This is a read-only demo. Click "Start Demo" below to see text auto-typed by the server.
+  </div>
+
+  <!-- Plain text mode textarea -->
+  <textarea id="shared-text" readonly></textarea>
+
+  <!-- Markdown mode container -->
+  <div id="markdown-container">
+    <textarea id="markdown-editor"></textarea>
+  </div>
+
+  <div class="button-container">
+    <button id="demo-button" class="demo">Start Demo</button>
+    <button id="open-button" class="open">Open</button>
+    <button id="copy-button" class="copy">Copy</button>
+    <button id="clear-button" class="clear">Clear</button>
+  </div>
+
+  <!-- Connection Lost Message -->
+  <div id="connection-status">
+    WebSocket connection has been lost.
+    <a href="#" id="reload-link">Reload Page</a>
+  </div>
+
+  <!-- Hidden file input (for "Open" button), but disabled in demo -->
+  <input
+    type="file"
+    id="file-input"
+    accept="
+      .txt,
+      .csv,
+      .md,
+      .markdown,
+      .html,
+      .xml,
+      .ini,
+      .conf,
+      .sh,
+      .py,
+      .js,
+      .json,
+      .yaml,
+      .yml,
+      .log,
+      text/*"
+    style="display: none;"
+  >
+
+  <div class="sticky-bottom-container">
+    <!-- LEFT TRIANGLE TAB -->
+    <div class="tab-container left-tab-container" id="left-tab-container">
+      <div class="tab corner-triangle left-tab"></div>
+      <div class="expanded left-expanded" id="left-expanded">
+        <div class="tab-content">
+          <p>
+            <strong>Project:</strong> Ghostboard (Demo)<br>
+            <strong>Author:</strong> jon6fingrs<br>
+            <strong>Version:</strong> 3.4.1 (Demo)
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDER GROUP -->
+    <div id="slider-group" class="slider-group">
+      <div id="dark-light-switch" class="slider dark-light">
+        <div class="toggle"></div>
+        <span class="icon sun">☀️</span>
+        <span class="icon moon">🌔</span>
+      </div>
+      <div id="editor-switch" class="slider editor-mode">
+        <div class="toggle"></div>
+        <span class="icon text">🔤</span>
+        <span class="icon markdown">📝</span>
+      </div>
+    </div>
+
+    <!-- RIGHT TRIANGLE TAB -->
+    <div class="tab-container right-tab-container" id="right-tab-container">
+      <div class="tab corner-triangle right-tab"></div>
+      <div class="expanded right-expanded" id="right-expanded">
+        <div class="tab-content">
+          <a href="https://github.com/jon6fingrs/ghostboard" target="_blank" id="github-link">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path
+                d="M12 0a12 12 0 00-3.79 23.4c.6.1.82-.26.82-.58v-2.05
+                c-3.34.72-4.04-1.6-4.04-1.6-.55-1.38-1.34-1.75-1.34-1.75-1.09-.74.08-.72.08-.72
+                1.21.08 1.85 1.24 1.85 1.24 1.07 1.83 2.8 1.3 3.48.99.1-.77.42-1.3.76-1.6
+                -2.66-.3-5.47-1.33-5.47-5.92 0-1.3.47-2.36 1.24-3.19-.12-.3-.54-1.52.12-3.18
+                0 0 1-.32 3.3 1.22A11.3 11.3 0 0112 5.8c1.02 0 2.04.14 2.99.4 2.32-1.54 3.31-1.22
+                3.31-1.22.66 1.66.24 2.88.12 3.18.77.83 1.24 1.9 1.24 3.19 0 4.6-2.82 5.6
+                -5.5 5.9.44.38.82 1.12.82 2.26v3.35c0 .32.22.69.82.58A12 12 0 0012 0z"
+              />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /*********************************************
+     *  COPY FUNCTION
+     *********************************************/
+    async function copyTextIosSafe(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        try {
+          await navigator.clipboard.writeText(text);
+          return true;
+        } catch (err) {
+          console.warn("navigator.clipboard.writeText failed, fallback to execCommand.", err);
+        }
+      }
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.setAttribute("readonly", "");
+      textArea.style.position = "absolute";
+      textArea.style.opacity = 0;
+      textArea.style.height = "0";
+      textArea.style.width = "0";
+      textArea.style.left = "-9999px";
+      document.body.appendChild(textArea);
+
+      textArea.select();
+      textArea.setSelectionRange(0, 99999); // iOS
+      try {
+        const successful = document.execCommand("copy");
+        document.body.removeChild(textArea);
+        return successful;
+      } catch (err) {
+        document.body.removeChild(textArea);
+        console.error("Fallback: Oops, unable to copy", err);
+        return false;
+      }
+    }
+
+    const body = document.body;
+    const textarea = document.getElementById('shared-text');
+    const markdownContainer = document.getElementById('markdown-container');
+    const markdownEditorElem = document.getElementById('markdown-editor');
+
+    const copyButton = document.getElementById('copy-button');
+    const clearButton = document.getElementById('clear-button');
+    const openButton = document.getElementById('open-button');
+    const demoButton = document.getElementById('demo-button');
+
+    const connectionStatus = document.getElementById('connection-status');
+    const reloadLink = document.getElementById('reload-link');
+    const fileInput = document.getElementById('file-input');
+
+    // We'll track the user's preference for text vs. markdown
+    const savedEditorMode = localStorage.getItem('editorMode');
+    let isMarkdownMode = (savedEditorMode === 'markdown');
+
+    // Init light/dark mode from storage
+    const savedMode = localStorage.getItem('mode');
+    if (savedMode) {
+      body.classList.remove('light-mode', 'dark-mode');
+      body.classList.add(savedMode);
+    } else {
+      body.classList.add('dark-mode');
+    }
+
+    // Replace your current SimpleMDE constructor with these lines:
+    const simplemde = new SimpleMDE({
+      element: markdownEditorElem,
+      spellChecker: false,
+      autofocus: false,
+      status: false,
+      // remove readOnly here, and instead let the toolbar appear normally
+    });
+
+    // Now set the underlying CodeMirror to "nocursor" mode:
+    simplemde.codemirror.setOption("readOnly", "nocursor");
+
+
+    function setCurrentText(text) {
+      textarea.value = text;
+      simplemde.value(text);
+      if (simplemde.isPreviewActive()) {
+        const previewElement = document.querySelector(".editor-preview");
+        if (previewElement) {
+          previewElement.innerHTML = simplemde.markdown(text);
+        }
+      }
+    }
+
+    function getCurrentText() {
+      return isMarkdownMode ? simplemde.value() : textarea.value;
+    }
+
+    let isProgrammaticChange = false;
+
+    // Because it's a demo, we do NOT send user input to the server.
+
+    /*********************************************
+     * DRAG & DROP => Disabled in Demo
+     *********************************************/
+    textarea.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      textarea.classList.add("text-drop-target-dragover");
+    });
+    textarea.addEventListener("dragleave", () => {
+      textarea.classList.remove("text-drop-target-dragover");
+    });
+    textarea.addEventListener("drop", (event) => {
+      event.preventDefault();
+      textarea.classList.remove("text-drop-target-dragover");
+      alert("File drag-and-drop is disabled in this demo version.");
+    });
+
+    const codeMirrorContainer = document.querySelector(".CodeMirror");
+    if (codeMirrorContainer) {
+      codeMirrorContainer.addEventListener("dragover", (evt) => {
+        evt.preventDefault();
+        codeMirrorContainer.classList.add("md-drop-target-dragover");
+      });
+      codeMirrorContainer.addEventListener("dragleave", () => {
+        codeMirrorContainer.classList.remove("md-drop-target-dragover");
+      });
+      codeMirrorContainer.addEventListener("drop", (evt) => {
+        evt.preventDefault();
+        codeMirrorContainer.classList.remove("md-drop-target-dragover");
+        alert("Markdown file dropping is disabled in this demo mode.");
+      });
+    }
+
+    /*********************************************
+     * WEBSOCKET => Connect on port 8765
+     *********************************************/
+    let socket = null;
+    let reconnectAttempts = 0;
+    const maxReconnectDelay = 30000; // 30 seconds
+
+    // We use location.pathname for the "board" name
+    // but override the port to 8765 for WebSockets
+    const websocketUrl = (() => {
+      const protocol = (location.protocol === "https:") ? "wss://" : "ws://";
+      return protocol + location.hostname + ":8765" + location.pathname;
+    })();
+    console.log("WebSocket URL:", websocketUrl);
+
+    function connectWebSocket() {
+      socket = new WebSocket(websocketUrl);
+
+      socket.addEventListener("open", () => {
+        console.log("WebSocket open (demo).");
+        connectionStatus.style.display = 'none';
+        reconnectAttempts = 0;
+      });
+
+      socket.addEventListener("message", (event) => {
+        const newText = event.data;
+        if (newText !== getCurrentText()) {
+          isProgrammaticChange = true;
+          setCurrentText(newText);
+          isProgrammaticChange = false;
+        }
+      });
+
+      socket.addEventListener("error", (error) => {
+        console.error("WebSocket error:", error);
+      });
+
+      socket.addEventListener("close", () => {
+        console.warn("WebSocket closed.");
+        connectionStatus.style.display = 'block';
+        retryConnection();
+      });
+    }
+
+    function retryConnection() {
+      const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), maxReconnectDelay);
+      setTimeout(() => {
+        reconnectAttempts++;
+        console.log(`Reconnecting... Attempt ${reconnectAttempts}`);
+        connectWebSocket();
+      }, delay);
+    }
+
+    connectWebSocket();
+
+    /*********************************************
+     * COPY & CLEAR & DEMO BUTTONS
+     *********************************************/
+    copyButton.addEventListener('click', async (event) => {
+      event.preventDefault();
+      const success = await copyTextIosSafe(getCurrentText());
+      if (success) {
+        copyButton.textContent = 'Copied!';
+        setTimeout(() => {
+          copyButton.textContent = 'Copy';
+        }, 3000);
+      } else {
+        alert("Copy failed. Please copy manually.");
+      }
+    });
+
+    clearButton.addEventListener('click', () => {
+      // We call ?clear=true on the current path
+      let clearUrl = window.location.href;
+      if (clearUrl.includes('?')) {
+        clearUrl += '&clear=true';
+      } else {
+        clearUrl += '?clear=true';
+      }
+      fetch(clearUrl)
+        .then(res => res.text())
+        .then(txt => {
+          console.log("Clear result:", txt);
+        })
+        .catch(err => console.error(err));
+    });
+
+    demoButton.addEventListener('click', () => {
+      // We'll call ?start_demo=true on the current path
+      let demoUrl = window.location.href;
+      if (demoUrl.includes('?')) {
+        demoUrl += '&start_demo=true';
+      } else {
+        demoUrl += '?start_demo=true';
+      }
+      fetch(demoUrl)
+        .then(res => res.text())
+        .then(txt => {
+          console.log("Server responded: ", txt);
+        })
+        .catch(err => console.error(err));
+    });
+
+    /*********************************************
+     * OPEN BUTTON => Disabled in Demo
+     *********************************************/
+    openButton.addEventListener("click", () => {
+      alert("Opening files is disabled in this demo version.");
+    });
+    fileInput.addEventListener("change", (event) => {
+      alert("File import is disabled in this demo version.");
+      fileInput.value = "";
+    });
+
+    /*********************************************
+     * RELOAD LINK
+     *********************************************/
+    reloadLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      location.reload();
+    });
+
+    /*********************************************
+     * DARK/LIGHT MODE SLIDER
+     *********************************************/
+    const darkLightSwitch = document.getElementById('dark-light-switch');
+    if (body.classList.contains('dark-mode')) {
+      darkLightSwitch.classList.add('on');
+    }
+    darkLightSwitch.addEventListener('click', () => {
+      const isDark = body.classList.contains('dark-mode');
+      const newMode = isDark ? 'light-mode' : 'dark-mode';
+      body.classList.remove(isDark ? 'dark-mode' : 'light-mode');
+      body.classList.add(newMode);
+      localStorage.setItem('mode', newMode);
+      darkLightSwitch.classList.toggle('on');
+    });
+
+    /*********************************************
+     * MARKDOWN/TEXT MODE SLIDER
+     *********************************************/
+    const editorSwitch = document.getElementById('editor-switch');
+    function setEditorMode(markdown, oldText) {
+      if (markdown) {
+        markdownContainer.style.display = 'block';
+        textarea.style.display = 'none';
+        editorSwitch.classList.add('on');
+      } else {
+        markdownContainer.style.display = 'none';
+        textarea.style.display = 'block';
+        editorSwitch.classList.remove('on');
+      }
+      setCurrentText(oldText);
+    }
+    setEditorMode(isMarkdownMode, textarea.value);
+    editorSwitch.addEventListener('click', () => {
+      const oldText = getCurrentText();
+      isMarkdownMode = !isMarkdownMode;
+      localStorage.setItem('editorMode', isMarkdownMode ? 'markdown' : 'text');
+      setEditorMode(isMarkdownMode, oldText);
+    });
+
+    /*********************************************
+     * TRIANGLE TAB LOGIC
+     *********************************************/
+    const leftTabContainer = document.getElementById('left-tab-container');
+    const rightTabContainer = document.getElementById('right-tab-container');
+    const leftExpanded = document.getElementById('left-expanded');
+    const rightExpanded = document.getElementById('right-expanded');
+    const githubLink = document.getElementById('github-link');
+
+    leftTabContainer.addEventListener('click', () => {
+      toggleExpansion(leftExpanded);
+    });
+    rightTabContainer.addEventListener('click', (e) => {
+      e.preventDefault();
+      toggleExpansion(rightExpanded);
+    });
+    githubLink.addEventListener('click', (e) => {
+      e.stopPropagation();
+      hideAllExpansions();
+    });
+
+    function toggleExpansion(expandedElement) {
+      const isVisible = expandedElement.classList.contains('show');
+      hideAllExpansions();
+      if (!isVisible) expandedElement.classList.add('show');
+    }
+    function hideAllExpansions() {
+      leftExpanded.classList.remove('show');
+      rightExpanded.classList.remove('show');
+    }
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.tab-container') && !e.target.closest('.expanded')) {
+        hideAllExpansions();
+      }
+    });
+  </script>
+</body>
+</html>
