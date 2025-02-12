@@ -1,5 +1,7 @@
 # Ghostboard
 
+🚀 **Live Demo Available**: Check out **[Ghostboard in action](https://ghostboard.app/)** (read-only demo). 
+
 Ghostboard is a lightweight, self-hosted solution for real-time synchronized text sharing. This repository includes a WebSocket server for syncing text across multiple clients and a command-line client for retrieving or updating the shared text.
 
 This project is aimed at self-hosters who want to quickly and easily share text between devices. **There is no encryption or security**—it is not suitable for deployment on the internet or other untrusted networks. Ghostboard creates a simple webpage that accepts text, which is mirrored across all connected instances. A command-line client is also provided for interacting with the text without requiring a graphical interface.
