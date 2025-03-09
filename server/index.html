@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Ghostboard</title>
 
+  <!-- PWA: Theme color for the address bar in mobile browsers -->
+  <meta name="theme-color" content="#343541"><!-- ADDED for PWA -->
+
+  <!-- PWA: Link to Manifest File -->
+  <link rel="manifest" href="/static/manifest.json"><!-- ADDED for PWA -->
+
   <!-- SimpleMDE CSS & JS (via CDN) -->
   <link rel="stylesheet" href="/static/simplemde.min.css">
   <script src="/static/simplemde.min.js"></script>
@@ -536,6 +542,22 @@
   </div>
 
   <script>
+ 
+    /********************************************
+     * REGISTER THE SERVICE WORKER FOR PWA
+     ********************************************/
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/static/sw.js') // ADJUST PATH as needed
+          .then(reg => {
+            console.log('Service Worker registered with scope:', reg.scope);
+          })
+          .catch(err => {
+            console.error('Service Worker registration failed:', err);
+          });
+      });
+    }
+
     /*********************************************
      *  COPY FUNCTION (IOS-FRIENDLY) + BLUR FIX  *
      *********************************************/

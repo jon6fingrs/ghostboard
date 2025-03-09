@@ -1,0 +1,21 @@
+{
+  "name": "Ghostboard",
+  "short_name": "Ghostboard",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#343541",
+  "theme_color": "#343541",
+  "description": "A collaborative text & markdown board.",
+  "icons": [
+    {
+      "src": "/static/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/static/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
