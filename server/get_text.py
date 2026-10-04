@@ -100,9 +100,21 @@ async def handle_request(request):
 
     # Handle POST requests for text updates
     if request.method == "POST":
-        data = await request.post()
-        if 'text' in data:
-            query_text = data['text']
+        query_text = None
+        if request.content_type in ("application/x-www-form-urlencoded", "multipart/form-data"):
+            data = await request.post()
+            if 'text' in data:
+                query_text = data['text']
+                if isinstance(query_text, web.FileField):  # curl -F "text=@file"
+                    query_text = query_text.file.read().decode("utf-8", errors="replace")
+
+        # Otherwise use the raw body as the text, e.g. curl --data-binary @file
+        if query_text is None and request.content_type != "multipart/form-data":
+            body = await request.read()
+            if body:
+                query_text = body.decode("utf-8", errors="replace")
+
+        if query_text is not None:
             text_store[raw_path] = query_text
             print(f"REST update for path '{raw_path}': {preview(query_text)}")
 
@@ -110,7 +122,7 @@ async def handle_request(request):
             broadcast(connected_clients.get(raw_path, ()), query_text)
 
             return web.Response(text="Text updated successfully.")
-        raise web.HTTPBadRequest(text="Missing 'text' field.")
+        raise web.HTTPBadRequest(text="No text provided.")
 
     # Handle text retrieval via GET request
     if request.query.get('get_text') == 'true':
