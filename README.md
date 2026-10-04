@@ -23,6 +23,7 @@ This project is aimed at self-hosters who want to quickly and easily share text 
   - **New Feature (v3.1.0)**: FULL MARKDOWN SUPPORT- thanks to /u/jack3308 for the suggestion!
   - **New Feature (v3.2.0)**: BUNDLED NGINX IN DOCKER! Can simply open port 80 now and not worry about complex reverse proxy routing.
   - **New Feature (v3.4.0)**: REST API support for updating and retrieving text.
+  - **v3.5.0**: Multi-arch images (amd64 + arm64) built automatically by GitHub Actions. Large texts (up to 16 MiB) no longer drop the connection. Open tabs restore a board's text after the server restarts. Updated dependencies and quieter logs.
 
 - **Client** (Legacy):
   - Command-line tool to retrieve or update the shared text.
@@ -53,7 +54,7 @@ This project is aimed at self-hosters who want to quickly and easily share text 
    ```bash
    docker pull thehelpfulidiot/ghostboard-server
    ```
-   - Use tag `latest-arm64` for arm release.
+   - `latest` is multi-arch (amd64 + arm64). `latest-arm64` still works for older setups.
 
 2. Run the server container:
    ```bash
@@ -81,7 +82,7 @@ This project is aimed at self-hosters who want to quickly and easily share text 
 
 3. Run the server:
    ```bash
-   python3 server.py
+   python3 get_text.py
    ```
 
 4. Access the server:
@@ -127,6 +128,11 @@ You can retrieve the current text from a board using a GET request.
 
 These commands work with dynamically created boards by appending the desired board path to the URL, such as `http://ghostboard-server:port/board-name`.
 
+- Clear a board:
+  ```bash
+  curl -X POST "http://ghostboard-server:port" -d "text="
+  ```
+
 ### [Ghostboard iOS Shortcuts Integration](ios_shortcuts/ios_shortcuts_readme.md)
 
 ---
@@ -139,7 +145,7 @@ These commands work with dynamically created boards by appending the desired boa
    ```bash
    docker pull thehelpfulidiot/ghostboard-client
    ```
-   - Use tag `latest-arm64` for arm release.
+   - `latest` is multi-arch (amd64 + arm64).
 
 2. Retrieve the current text:
    ```bash
@@ -294,6 +300,31 @@ error_page 404 /index.html;
 
 <!-- Connection Lost -->
 ![Connection Lost](screenshots/connection-lost.png)
+
+---
+
+## Configuration
+
+Optional environment variables for the server:
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `GHOSTBOARD_CLEAR_DELAY` | `300` | Seconds a board keeps its text after the last browser disconnects. |
+| `GHOSTBOARD_MAX_TEXT_SIZE` | `16777216` | Largest text accepted, in bytes. |
+
+---
+
+## Docker Images (CI)
+
+Images are built and pushed to Docker Hub by GitHub Actions (`.github/workflows/`):
+
+- Push to `main` touching `server/` → `thehelpfulidiot/ghostboard-server:latest` (+ `latest-arm64`, `sha-<commit>`).
+- Push to `main` touching `client/` → same for `thehelpfulidiot/ghostboard-client`.
+- Push a tag like `v3.5.0` → also `:3.5.0`, `:3.5`, `:3`.
+- Pull requests build and smoke-test only, without pushing.
+- Can be run manually from the Actions tab ("Run workflow").
+
+Setup (one time): create a Docker Hub access token with Read & Write scope, then add repository secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` under *Settings → Secrets and variables → Actions*.
 
 ---
 

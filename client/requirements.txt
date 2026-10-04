@@ -1,1 +1,1 @@
-websockets
+websockets==17.2

@@ -2,7 +2,8 @@ services:
     ghostboard-server:
         container_name: ghostboard
         ports:
-            - 8080:8080
-            - 8765:8765
+            # Bundled nginx serves the page and WebSocket on one port.
+            # (Legacy: map 8080:8080 and 8765:8765 instead.)
+            - 8080:80
         restart: always
-        image: thehelpfulidiot/ghostboard-server
+        image: thehelpfulidiot/ghostboard-server:latest
