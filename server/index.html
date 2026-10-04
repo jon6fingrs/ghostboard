@@ -505,7 +505,7 @@
           <p>
             <strong>Project:</strong> Ghostboard<br>
             <strong>Author:</strong> jon6fingrs<br>
-            <strong>Version:</strong> 3.4.3
+            <strong>Version:</strong> 3.5.0
           </p>
         </div>
       </div>
@@ -689,41 +689,6 @@
         }
     });
 
-    // Track the drag state to prevent stale classes
-    let dragCounter = 0;
-
-    function handleDragOver(event) {
-      event.preventDefault();
-      event.dataTransfer.dropEffect = "copy";
-
-      // Only apply the class once
-      if (dragCounter === 0) {
-        codeMirrorContainer.classList.add("md-drop-target-dragover");
-      }
-
-      dragCounter++;  // Increment drag event count
-    }
-
-    function handleDragLeave() {
-      dragCounter--;  // Decrement drag event count
-
-      // Use a short delay to avoid race conditions
-      setTimeout(() => {
-        if (dragCounter <= 0) {
-          codeMirrorContainer.classList.remove("md-drop-target-dragover");
-          dragCounter = 0;  // Ensure the counter resets
-        }
-      }, 50);
-    }
-
-    function handleDrop(event) {
-      event.preventDefault();
-      codeMirrorContainer.classList.remove("md-drop-target-dragover");
-      dragCounter = 0;  // Reset drag counter on drop
-      const file = event.dataTransfer.files[0];
-      handleFileDrop(file);
-    }
-
     /*********************************************
      *        WEBSOCKET & MESSAGE HANDLING
      *********************************************/
@@ -751,12 +716,8 @@
       // Initial value to be replaced during Docker build.
       const IN_DOCKER = false;  // This gets replaced with `true` by Docker's sed command.
 
-      console.error("IN_DOCKER", IN_DOCKER);
-
       const metaTag = document.querySelector('meta[name="x-in-docker"]');
       const nginx_forwarded = (metaTag && metaTag.getAttribute('content') === 'true') ? true : false;
-
-      console.error("nginx forwarded: ", nginx_forwarded);
 
       // Step 1: Handle IP address or localhost when not in Docker
       if ((isIPAddress || isLocalhost) && !nginx_forwarded) {
@@ -766,7 +727,7 @@
       // Step 2: Handle Docker or HTTPS condition (use `/ws` prefix)
       const path = location.pathname === "/" ? "" : location.pathname;
       if (nginx_forwarded || location.protocol === "https:") {
-        return `${protocol}${location.hostname}:${location.port}/ws${path}`;
+        return `${protocol}${location.host}/ws${path}`;
       }
 
       // Step 3: Default case, use port 8765
@@ -778,6 +739,8 @@
 
     let reconnectAttempts = 0;
     let maxReconnectDelay = 30000;  // Maximum delay of 30 seconds
+    let hasConnectedBefore = false;  // True once any connection has opened
+    let awaitingInitialText = false; // True until the first message after (re)connect
 
     function connectWebSocket() {
       socket = new WebSocket(websocketUrl);
@@ -788,10 +751,24 @@
         simplemde.codemirror.setOption("readOnly", false);
         connectionStatus.style.display = 'none';  // Hide alert
         reconnectAttempts = 0;  // Reset attempts after successful connection
+        awaitingInitialText = true;
       });
 
       socket.addEventListener("message", (event) => {
         const newText = event.data;
+
+        // If the server came back empty (e.g. container restarted/updated)
+        // but this tab still has text, restore the board from it.
+        const isReconnect = hasConnectedBefore;
+        const isInitial = awaitingInitialText;
+        awaitingInitialText = false;
+        hasConnectedBefore = true;
+        if (isInitial && isReconnect && newText === "" && getCurrentText() !== "") {
+          console.log("Server board was empty after reconnect; restoring local text.");
+          sendTextUpdate();
+          return;
+        }
+
         if (newText !== getCurrentText()) {
           isProgrammaticChange = true;
           setCurrentText(newText);

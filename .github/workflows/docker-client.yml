@@ -1,0 +1,79 @@
+name: Client image
+
+# Builds thehelpfulidiot/ghostboard-client for amd64 + arm64 and pushes to
+# Docker Hub when client/ changes (same tagging scheme as the server image).
+#
+# Requires repo secrets DOCKERHUB_USERNAME and DOCKERHUB_TOKEN.
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+    paths:
+      - 'client/**'
+      - '.github/workflows/docker-client.yml'
+  pull_request:
+    paths:
+      - 'client/**'
+      - '.github/workflows/docker-client.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IMAGE: thehelpfulidiot/ghostboard-client
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build amd64 image for testing
+        uses: docker/build-push-action@v6
+        with:
+          context: client
+          load: true
+          tags: ghostboard-client:test
+          cache-from: type=gha,scope=client
+          cache-to: type=gha,scope=client,mode=max
+
+      - name: Smoke test
+        run: docker run --rm --entrypoint python ghostboard-client:test -c "import websockets"
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') }}
+            type=raw,value=latest-arm64,enable=${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') }}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Log in to Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push multi-arch image
+        if: github.event_name != 'pull_request'
+        uses: docker/build-push-action@v6
+        with:
+          context: client
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=client
+          cache-to: type=gha,scope=client,mode=max
