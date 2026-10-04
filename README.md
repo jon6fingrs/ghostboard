@@ -23,6 +23,7 @@ This project is aimed at self-hosters who want to quickly and easily share text 
   - **New Feature (v3.1.0)**: FULL MARKDOWN SUPPORT- thanks to /u/jack3308 for the suggestion!
   - **New Feature (v3.2.0)**: BUNDLED NGINX IN DOCKER! Can simply open port 80 now and not worry about complex reverse proxy routing.
   - **New Feature (v3.4.0)**: REST API support for updating and retrieving text.
+  - **v3.5.1**: REST API accepts raw bodies (`curl --data-binary @file`); docs fixed for `&`/`+` truncation.
   - **v3.5.0**: Multi-arch images (amd64 + arm64) built automatically by GitHub Actions. Large texts (up to 16 MiB) no longer drop the connection. Open tabs restore a board's text after the server restarts. Updated dependencies and quieter logs.
 
 - **Client** (Legacy):
@@ -100,15 +101,23 @@ You can update the text on a board using a POST request.
 
 **Examples:**
 
-- Update text from a file:
+- Update text from a file or command output (sent exactly as-is, newlines and all):
   ```bash
-  curl -X POST "http://ghostboard-server:port" -d "text=$(cat example.txt)"
+  curl -X POST "http://ghostboard-server:port" --data-binary @example.txt
+  du -h -d 2 . | sort -rh | curl -X POST "http://ghostboard-server:port" --data-binary @-
   ```
 
 - Update text directly:
   ```bash
-  curl -X POST "http://ghostboard-server:port" -d "text=example"
+  curl -X POST "http://ghostboard-server:port" --data-urlencode "text=example"
   ```
+
+- Clear a board:
+  ```bash
+  curl -X POST "http://ghostboard-server:port" -d "text="
+  ```
+
+> **Note:** Use `--data-urlencode` (not `-d`) when sending `text=...`. With `-d`, characters like `&`, `+` and `%` are not encoded, so the text gets cut off at the first `&` and `+` turns into a space. A raw body (`--data-binary`) avoids encoding entirely; a body that isn't a `text=` form field is stored as-is.
 
 ### Retrieving Text
 
@@ -127,11 +136,6 @@ You can retrieve the current text from a board using a GET request.
   ```
 
 These commands work with dynamically created boards by appending the desired board path to the URL, such as `http://ghostboard-server:port/board-name`.
-
-- Clear a board:
-  ```bash
-  curl -X POST "http://ghostboard-server:port" -d "text="
-  ```
 
 ### [Ghostboard iOS Shortcuts Integration](ios_shortcuts/ios_shortcuts_readme.md)
 
@@ -320,7 +324,8 @@ Images are built and pushed to Docker Hub by GitHub Actions (`.github/workflows/
 
 - Push to `main` touching `server/` → `thehelpfulidiot/ghostboard-server:latest` (+ `latest-arm64`, `sha-<commit>`).
 - Push to `main` touching `client/` → same for `thehelpfulidiot/ghostboard-client`.
-- Push a tag like `v3.5.0` → also `:3.5.0`, `:3.5`, `:3`.
+- Server builds on `main` are also tagged with the version shown in the page (`<strong>Version:</strong>` in `server/index.html`), e.g. `:3.5.1`, `:3.5`, `:3`. **Bump that version for each release**; otherwise the next build overwrites the existing version tag.
+- Push a git tag like `v3.5.0` → `:3.5.0`, `:3.5`, `:3` (works for the client image too).
 - Pull requests build and smoke-test only, without pushing.
 - Can be run manually from the Actions tab ("Run workflow").
 
