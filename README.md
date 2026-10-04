@@ -23,6 +23,7 @@ This project is aimed at self-hosters who want to quickly and easily share text 
   - **New Feature (v3.1.0)**: FULL MARKDOWN SUPPORT- thanks to /u/jack3308 for the suggestion!
   - **New Feature (v3.2.0)**: BUNDLED NGINX IN DOCKER! Can simply open port 80 now and not worry about complex reverse proxy routing.
   - **New Feature (v3.4.0)**: REST API support for updating and retrieving text.
+  - **v3.5.1**: REST API accepts raw bodies (`curl --data-binary @file`); docs fixed for `&`/`+` truncation.
   - **v3.5.0**: Multi-arch images (amd64 + arm64) built automatically by GitHub Actions. Large texts (up to 16 MiB) no longer drop the connection. Open tabs restore a board's text after the server restarts. Updated dependencies and quieter logs.
 
 - **Client** (Legacy):
@@ -323,7 +324,8 @@ Images are built and pushed to Docker Hub by GitHub Actions (`.github/workflows/
 
 - Push to `main` touching `server/` → `thehelpfulidiot/ghostboard-server:latest` (+ `latest-arm64`, `sha-<commit>`).
 - Push to `main` touching `client/` → same for `thehelpfulidiot/ghostboard-client`.
-- Push a tag like `v3.5.0` → also `:3.5.0`, `:3.5`, `:3`.
+- Server builds on `main` are also tagged with the version shown in the page (`<strong>Version:</strong>` in `server/index.html`), e.g. `:3.5.1`, `:3.5`, `:3`. **Bump that version for each release**; otherwise the next build overwrites the existing version tag.
+- Push a git tag like `v3.5.0` → `:3.5.0`, `:3.5`, `:3` (works for the client image too).
 - Pull requests build and smoke-test only, without pushing.
 - Can be run manually from the Actions tab ("Run workflow").
 
