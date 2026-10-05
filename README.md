@@ -23,6 +23,7 @@ This project is aimed at self-hosters who want to quickly and easily share text 
   - **New Feature (v3.1.0)**: FULL MARKDOWN SUPPORT- thanks to /u/jack3308 for the suggestion!
   - **New Feature (v3.2.0)**: BUNDLED NGINX IN DOCKER! Can simply open port 80 now and not worry about complex reverse proxy routing.
   - **New Feature (v3.4.0)**: REST API support for updating and retrieving text.
+  - **v3.5.2**: Quieter container logs (no supervisor/nginx startup warnings, silent health check).
   - **v3.5.1**: REST API accepts raw bodies (`curl --data-binary @file`); docs fixed for `&`/`+` truncation.
   - **v3.5.0**: Multi-arch images (amd64 + arm64) built automatically by GitHub Actions. Large texts (up to 16 MiB) no longer drop the connection. Open tabs restore a board's text after the server restarts. Updated dependencies and quieter logs.
 
