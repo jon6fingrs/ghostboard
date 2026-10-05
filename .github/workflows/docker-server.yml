@@ -60,6 +60,17 @@ jobs:
           curl -fs -X POST "http://127.0.0.1:8000/ci" -d "text=hello from ci"
           test "$(curl -fs 'http://127.0.0.1:8000/ci?get_text=true')" = "hello from ci"
           curl -fs "http://127.0.0.1:8000/static/manifest.json" >/dev/null
+          curl -fs "http://127.0.0.1:8000/healthz" >/dev/null
+          # Docker's own health check must report healthy
+          for i in $(seq 1 45); do
+            [ "$(docker inspect -f '{{.State.Health.Status}}' gb)" = healthy ] && break
+            sleep 2
+          done
+          docker inspect -f '{{.State.Health.Status}}' gb | grep -qx healthy
+          # Startup should be free of supervisor/nginx warnings
+          if docker logs gb 2>&1 | grep -E "CRIT|UserWarning|\[warn\]"; then
+            echo "Unexpected warnings in container logs"; exit 1
+          fi
           # WebSocket upgrade through nginx should switch protocols
           curl -s -o /dev/null -w '%{http_code}' --max-time 3 \
             -H "Connection: Upgrade" -H "Upgrade: websocket" \

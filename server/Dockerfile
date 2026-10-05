@@ -37,8 +37,8 @@ EXPOSE 80 8080 8765
 
 # Mark the container unhealthy if nginx or the Python server stops answering
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1/?get_text=true', timeout=4)" || exit 1
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1/healthz', timeout=4)" || exit 1
 
 # Start supervisor (which in turn starts nginx and the Python server)
-CMD ["/usr/bin/supervisord", "-n"]
+CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
 
